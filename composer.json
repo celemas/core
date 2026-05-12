@@ -1,12 +1,12 @@
 {
-	"name": "duon/core",
-	"description": "Duon core web framework",
+	"name": "celemas/core",
+	"description": "Celemas core web framework",
 	"type": "library",
 	"license": "MIT",
 	"authors": [
 		{
 			"name": "Ernst",
-			"email": "ernst@duon.sh"
+			"email": "ernst@celemas.dev"
 		}
 	],
 	"minimum-stability": "dev",
@@ -14,22 +14,22 @@
 	"authors": [
 		{
 			"name": "Ernst",
-			"email": "ernst@duon.sh"
+			"email": "ernst@celemas.dev"
 		}
 	],
-	"homepage": "https://duon.sh/core",
+	"homepage": "https://celemas.dev/core",
 	"require": {
 		"php": "^8.5",
 		"ext-fileinfo": "*",
-		"duon/cli": "^0.1",
-		"duon/container": "^0.3.0",
-		"duon/router": "dev-main",
+		"celemas/cli": "^0.1",
+		"celemas/container": "^0.3.0",
+		"celemas/router": "dev-main",
 		"laminas/laminas-httphandlerrunner": "^2.4",
 		"psr/http-factory": "^1.0",
 		"psr/http-message-implementation": "^1.0"
 	},
 	"require-dev": {
-		"duon/dev": "^3.0",
+		"celemas/dev": "^3.0",
 		"guzzlehttp/psr7": "^2",
 		"laminas/laminas-diactoros": "^2 || ^3",
 		"nyholm/psr7": "^1.5",
@@ -37,12 +37,12 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Duon\\Core\\": "src"
+			"Celemas\\Core\\": "src"
 		}
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"Duon\\Core\\Tests\\": "tests"
+			"Celemas\\Core\\Tests\\": "tests"
 		}
 	},
 	"scripts": {
