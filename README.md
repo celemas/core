@@ -1,10 +1,11 @@
 # Celemas Core Framework
 
 <!-- prettier-ignore-start -->
+[![ci](https://github.com/celemas/core/actions/workflows/ci.yml/badge.svg)](https://github.com/celemas/core/actions)
+[![codecov](https://codecov.io/github/celemas/core/graph/badge.svg?token=JLK3RCVZPL)](https://codecov.io/github/celemas/core)
+[![psalm coverage](https://shepherd.dev/github/celemas/core/coverage.svg?)](https://shepherd.dev/github/celemas/core)
+[![psalm level](https://shepherd.dev/github/celemas/core/level.svg?)](https://shepherd.dev/github/celemas/core)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
-[![CI](https://github.com/celemas/core/actions/workflows/ci.yml/badge.svg)](https://github.com/celemas/core/actions)
-[![Psalm level](https://shepherd.dev/github/celemas/core/level.svg?)](https://celemas.dev/core)
-[![Psalm coverage](https://shepherd.dev/github/celemas/core/coverage.svg?)](https://shepherd.dev/github/celemas/core)
 <!-- prettier-ignore-end -->
 
 Celemas Core is a lightweight and easily extendable >=PHP 8.3 web framework.
