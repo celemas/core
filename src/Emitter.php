@@ -19,7 +19,7 @@ final class Emitter implements EmitterInterface
 	{
 		$sapiStreamEmitter = new SapiStreamEmitter($maxBufferLength);
 		$conditionalEmitter = new class($sapiStreamEmitter) implements EmitterInterface {
-			private $emitter;
+			private EmitterInterface $emitter;
 
 			public function __construct(EmitterInterface $emitter)
 			{
