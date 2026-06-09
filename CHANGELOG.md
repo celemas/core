@@ -1,20 +1,29 @@
 # Changelog
 
-## [Unreleased](https://github.com/celemas/core/compare/0.2.0...HEAD)
+## [Unreleased](https://github.com/duon/core/compare/0.3.0...HEAD)
 
-### Breaking Changes
+No notable changes since the last release.
 
-- Rename package metadata, root namespace, repository URLs, homepage, and contact email to Celemas.
-- Moved the `Celemas\Core\Factory` interface to `Celemas\Core\Factory\Factory`. PSR-17 factory implementations remain in the `Celemas\Core\Factory` namespace.
+## [0.3.0](https://github.com/celemas/core/releases/tag/0.3.0) (2026-06-09)
+
+### Breaking
+
+- Renamed the package from `duon/core` to `celemas/core`, along with the root namespace, dependency names, repository URLs, homepage, contact email, and built-in server environment variables.
+- Moved the PSR-17 factory interface from `Duon\Core\Factory` to `Celemas\Core\Factory\Factory`; concrete factories now live in the `Celemas\Core\Factory` namespace.
 - Removed app-level configuration support, including `ConfigInterface`, `AddsConfigInterface`, `App::config()`, and config arguments in `App::__construct()` and `App::create()`.
-- Removed the factory argument from `App::create()`. It now discovers a PSR-17 factory automatically; pass custom factories to the `App` constructor.
-- Updated route helpers to match `celemas/router`: use `any()` for methodless routes instead of `route()`, use `map()` for explicit method lists, use callable controller arrays, remove the passthrough `routes()` helper, remove the `addGroup()` helper, and make `group()` return `void`.
+- Changed `App::create()` to auto-discover a PSR-17 factory and accept only an optional PSR container; pass custom factories to the `App` constructor.
+- Updated route helpers to match `celemas/router`: use `any()` for methodless routes, `map()` for explicit method lists, callable controller arrays, and callback groups; `routes()` and `addGroup()` were removed, and `group()` now returns `void`.
+- Removed the global `Duon\Core\env()` helper and Composer file autoloading.
+- Required the PHP `fileinfo` extension for file response MIME detection.
 
 ### Added
 
 - Added `Celemas\Core\Factory\Discovery` to select an installed Nyholm, Guzzle, or Laminas PSR-17 factory automatically.
-- `App::group()` now delegates to the router callback group API.
-- BrowserSync-backed watch mode to the development server with the `--watch` option, configurable watch patterns, brace/glob expansion, and reload debounce settings.
+- Added BrowserSync-backed watch mode to the development server with the `--watch` option, configurable watch patterns, brace/glob expansion, symlink-aware patterns, and reload debounce settings.
+
+### Changed
+
+- Improved development server startup by validating port values and reporting unavailable ports before launching PHP or BrowserSync.
 
 ## [0.2.0](https://github.com/celemas/core/releases/tag/0.2.0) (2026-02-21)
 
