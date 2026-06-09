@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased](https://github.com/duon/core/compare/0.3.0...HEAD)
+## [Unreleased](https://codeberg.org/celemas/core/compare/0.3.0...HEAD)
 
 No notable changes since the last release.
 
-## [0.3.0](https://github.com/celemas/core/releases/tag/0.3.0) (2026-06-09)
+## [0.3.0](https://codeberg.org/celemas/core/src/tag/0.3.0) (2026-06-09)
 
 ### Breaking
 
@@ -25,7 +25,7 @@ No notable changes since the last release.
 
 - Improved development server startup by validating port values and reporting unavailable ports before launching PHP or BrowserSync.
 
-## [0.2.0](https://github.com/celemas/core/releases/tag/0.2.0) (2026-02-21)
+## [0.2.0](https://codeberg.org/celemas/core/src/tag/0.2.0) (2026-02-21)
 
 Codename: Jonas
 
@@ -33,7 +33,7 @@ Codename: Jonas
 
 - BREAKING: Replaced `celemas/registry` dependency with `celemas/container`. The `Registry` class is now `Container` (`Celemas\Container\Container`), and `App::registry()` is now `App::container()`.
 
-## [0.1.0](https://github.com/celemas/core/releases/tag/0.1.0) (2026-01-31)
+## [0.1.0](https://codeberg.org/celemas/core/src/tag/0.1.0) (2026-01-31)
 
 Initial release.
 
