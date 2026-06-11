@@ -10,6 +10,7 @@
 ### Changed
 
 - Scoped PHP error conversion to handled requests instead of registering global PHP handlers.
+- Required a server request when rendering errors directly; renderers now receive a non-null request.
 - Mapped router not-found and method-not-allowed failures to core HTTP exceptions before rendering.
 - Declared the PSR HTTP server, HTTP message, and log interfaces used by runtime code as direct dependencies.
 

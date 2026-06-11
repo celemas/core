@@ -14,7 +14,7 @@ interface Renderer
 	public function render(
 		Throwable $exception,
 		ResponseFactory $factory,
-		?Request $request,
+		Request $request,
 		bool $debug,
 	): Response;
 }

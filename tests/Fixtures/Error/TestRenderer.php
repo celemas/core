@@ -17,11 +17,11 @@ final class TestRenderer implements Renderer
 	public function render(
 		Throwable $exception,
 		ResponseFactory $factory,
-		?Request $request,
+		Request $request,
 		bool $debug,
 	): Response {
 		$response = $factory->createResponse();
-		$method = $request ? $request->getMethod() : 'without request';
+		$method = $request->getMethod();
 		$response
 			->getBody()
 			->write(

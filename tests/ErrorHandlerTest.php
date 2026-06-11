@@ -100,18 +100,19 @@ final class ErrorHandlerTest extends TestCase
 	{
 		$handler = new Handler($this->factory()->responseFactory());
 		$handler->renderer(new TestRenderer());
-		$response = $handler->response(new DivisionByZeroError('test'));
+		$response = $handler->response(new DivisionByZeroError('test'), $this->request());
 
 		$this->assertSame(
-			DivisionByZeroError::class . ' rendered without request test',
+			DivisionByZeroError::class . ' rendered GET test',
 			(string) $response->getBody(),
 		);
 	}
 
 	public function testFallbackUsesHttpStatusAndEscapesTitle(): void
 	{
+		$request = $this->request();
 		$handler = new Handler($this->factory()->responseFactory());
-		$response = $handler->response(new HttpNotFound($this->request(), message: '<missing>'));
+		$response = $handler->response(new HttpNotFound($request, message: '<missing>'), $request);
 
 		$this->assertSame(404, $response->getStatusCode());
 		$this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
@@ -121,7 +122,7 @@ final class ErrorHandlerTest extends TestCase
 	public function testFallbackUsesServerErrorForGenericException(): void
 	{
 		$handler = new Handler($this->factory()->responseFactory());
-		$response = $handler->response(new Exception('Boom'));
+		$response = $handler->response(new Exception('Boom'), $this->request());
 
 		$this->assertSame(500, $response->getStatusCode());
 		$this->assertSame('<h1>500 Internal Server Error</h1>', (string) $response->getBody());
@@ -129,10 +130,11 @@ final class ErrorHandlerTest extends TestCase
 
 	public function testDebugHandlerHandlesUnmatchedException(): void
 	{
+		$request = $this->request();
 		$handler = new Handler($this->factory()->responseFactory(), debug: true);
 		$handler->debugHandler(new TestDebugHandler());
 		$response = $this->withoutErrorLog(
-			static fn(): Response => $handler->response(new DivisionByZeroError('test')),
+			static fn(): Response => $handler->response(new DivisionByZeroError('test'), $request),
 		);
 
 		$this->assertSame(DivisionByZeroError::class . ' test', (string) $response->getBody());
@@ -144,7 +146,7 @@ final class ErrorHandlerTest extends TestCase
 
 		$this->throws(DivisionByZeroError::class, 'test');
 
-		$handler->response(new DivisionByZeroError('test'));
+		$handler->response(new DivisionByZeroError('test'), $this->request());
 	}
 
 	public function testLoggerReceivesMatchedAndUnmatchedExceptions(): void

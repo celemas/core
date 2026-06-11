@@ -91,7 +91,7 @@ class Handler implements Middleware
 		return false;
 	}
 
-	public function response(Throwable $exception, ?Request $request = null): Response
+	public function response(Throwable $exception, Request $request): Response
 	{
 		$exception = $this->normalize($exception, $request);
 		$renderer = null;
@@ -152,7 +152,7 @@ class Handler implements Middleware
 		return $this->fallback($exception);
 	}
 
-	protected function normalize(Throwable $exception, ?Request $request): Throwable
+	protected function normalize(Throwable $exception, Request $request): Throwable
 	{
 		if ($exception instanceof NotFoundException) {
 			return new HttpNotFound($request, previous: $exception);
