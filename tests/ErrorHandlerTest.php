@@ -7,6 +7,7 @@ namespace Celemas\Core\Tests;
 use Celemas\Core\Error\Handler;
 use Celemas\Core\Exception\HttpNotFound;
 use Celemas\Core\Response as CoreResponse;
+use Celemas\Core\Server\Console;
 use Celemas\Core\Tests\Fixtures\Error\TestDebugHandler;
 use Celemas\Core\Tests\Fixtures\Error\TestRenderer;
 use DivisionByZeroError;
@@ -130,14 +131,38 @@ final class ErrorHandlerTest extends TestCase
 
 	public function testDebugHandlerHandlesUnmatchedException(): void
 	{
-		$request = $this->request();
 		$handler = new Handler($this->factory()->responseFactory(), debug: true);
 		$handler->debugHandler(new TestDebugHandler());
-		$response = $this->withoutErrorLog(
-			static fn(): Response => $handler->response(new DivisionByZeroError('test'), $request),
-		);
+		$response = $handler->response(new DivisionByZeroError('test'), $this->request());
 
 		$this->assertSame(DivisionByZeroError::class . ' test', (string) $response->getBody());
+	}
+
+	public function testDevServerMarksHandledServerExceptions(): void
+	{
+		$this->withCliServer(function (): void {
+			Console::clearException();
+			$handler = new Handler($this->factory()->responseFactory());
+			$handler->renderer(new TestRenderer());
+
+			$handler->response(new Exception('Boom'), $this->request());
+
+			$this->assertTrue(Console::hasException());
+			Console::clearException();
+		});
+	}
+
+	public function testDevServerDoesNotMarkHandledClientErrors(): void
+	{
+		$this->withCliServer(function (): void {
+			Console::clearException();
+			$request = $this->request();
+			$handler = new Handler($this->factory()->responseFactory());
+
+			$handler->response(new HttpNotFound($request), $request);
+
+			$this->assertFalse(Console::hasException());
+		});
 	}
 
 	public function testDebugModeRethrowsUnmatchedExceptionWithoutDebugHandler(): void
@@ -222,31 +247,21 @@ final class ErrorHandlerTest extends TestCase
 		$this->assertSame('<h1>405 Method Not Allowed</h1>', $output);
 	}
 
-	/** @param callable(): mixed $callback */
-	private function withoutErrorLog(callable $callback): mixed
+	/** @param callable(): void $callback */
+	private function withCliServer(callable $callback): void
 	{
-		$previous = ini_get('error_log');
-		$file = tempnam(sys_get_temp_dir(), 'core-error-log-');
-
-		if ($file === false) {
-			$this->fail('Could not create temporary error log file.');
-		}
-
-		// @mago-expect lint:no-ini-set
-		ini_set('error_log', $file);
+		$oldValue = $_SERVER['CELEMAS_CLI_SERVER'] ?? null;
+		$_SERVER['CELEMAS_CLI_SERVER'] = '1';
 
 		try {
-			return $callback();
+			$callback();
 		} finally {
-			if ($previous === false) {
-				ini_restore('error_log');
-			} else {
-				// @mago-expect lint:no-ini-set
-				ini_set('error_log', $previous);
-			}
+			Console::clearException();
 
-			if (is_file($file)) {
-				unlink($file);
+			if ($oldValue === null) {
+				unset($_SERVER['CELEMAS_CLI_SERVER']);
+			} else {
+				$_SERVER['CELEMAS_CLI_SERVER'] = $oldValue;
 			}
 		}
 	}

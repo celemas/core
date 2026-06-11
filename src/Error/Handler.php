@@ -7,6 +7,7 @@ namespace Celemas\Core\Error;
 use Celemas\Core\Exception\HttpError;
 use Celemas\Core\Exception\HttpMethodNotAllowed;
 use Celemas\Core\Exception\HttpNotFound;
+use Celemas\Core\Server\Console as ServerConsole;
 use Celemas\Router\Exception\MethodNotAllowedException;
 use Celemas\Router\Exception\NotFoundException;
 use ErrorException;
@@ -112,6 +113,8 @@ class Handler implements Middleware
 		}
 
 		if ($renderer) {
+			$this->recordServerException($exception);
+
 			return $renderer->render(
 				$exception,
 				$this->responseFactory,
@@ -122,7 +125,7 @@ class Handler implements Middleware
 
 		if ($this->debug) {
 			if ($this->debugHandler) {
-				$this->errorLog($exception);
+				$this->recordServerException($exception);
 
 				return $this->debugHandler->handle($exception, $this->responseFactory);
 			}
@@ -139,6 +142,8 @@ class Handler implements Middleware
 				$this->logUnmatched($exception);
 			}
 
+			$this->recordServerException($exception);
+
 			return $this->defaultRenderer->renderer->render(
 				$exception,
 				$this->responseFactory,
@@ -148,6 +153,7 @@ class Handler implements Middleware
 		}
 
 		$this->logUnmatched($exception);
+		$this->recordServerException($exception);
 
 		return $this->fallback($exception);
 	}
@@ -199,16 +205,10 @@ class Handler implements Middleware
 		$this->logger?->log($logLevel, 'Matched exception', ['exception' => $exception]);
 	}
 
-	protected function errorLog(Throwable $exception): void
+	protected function recordServerException(Throwable $exception): void
 	{
-		$thisClass = $this::class;
-		$exceptionClass = $exception::class;
-		error_log("Exception handled by {$thisClass}: {$exceptionClass}\n");
-		error_log($exception->getMessage());
-
-		if ($this->debug) {
-			error_log("\nTraceback:\n");
-			error_log($exception->getTraceAsString());
+		if ($this->status($exception) >= 500) {
+			ServerConsole::recordException($exception, trace: $this->debug);
 		}
 	}
 
