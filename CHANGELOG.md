@@ -2,7 +2,16 @@
 
 ## [Unreleased](https://codeberg.org/celemas/core/compare/0.3.0...HEAD)
 
-No notable changes since the last release.
+### Added
+
+- Added `Celemas\Core\Error\Handler` and related renderer interfaces for PSR-15 error handling.
+- Added `App::errorHandler()` to wrap the whole request lifecycle, including routing errors.
+
+### Changed
+
+- Scoped PHP error conversion to handled requests by default; global PHP handlers now require explicit registration.
+- Mapped router not-found and method-not-allowed failures to core HTTP exceptions before rendering.
+- Declared the PSR HTTP server, HTTP message, and log interfaces used by runtime code as direct dependencies.
 
 ## [0.3.0](https://codeberg.org/celemas/core/src/tag/0.3.0) (2026-06-09)
 

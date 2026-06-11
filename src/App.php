@@ -6,6 +6,7 @@ namespace Celemas\Core;
 
 use Celemas\Container\Container;
 use Celemas\Container\Entry;
+use Celemas\Core\Error\Handler as ErrorHandler;
 use Celemas\Core\Factory\Discovery;
 use Celemas\Core\Factory\Factory;
 use Celemas\Router\AddsBeforeAfter;
@@ -30,6 +31,7 @@ class App implements RouteAdder
 	use AddsBeforeAfter;
 
 	protected readonly Dispatcher $dispatcher;
+	protected ?ErrorHandler $errorHandler = null;
 
 	public function __construct(
 		protected readonly Factory $factory,
@@ -92,6 +94,15 @@ class App implements RouteAdder
 		return $this->dispatcher->getMiddleware();
 	}
 
+	public function errorHandler(?ErrorHandler $handler = null): ?ErrorHandler
+	{
+		if ($handler !== null) {
+			$this->errorHandler = $handler;
+		}
+
+		return $this->errorHandler;
+	}
+
 	public function middleware(Middleware ...$middleware): void
 	{
 		$this->dispatcher->middleware(...$middleware);
@@ -134,11 +145,14 @@ class App implements RouteAdder
 		$request ??= $this->factory->serverRequest();
 		$this->dispatcher->setBeforeHandlers($this->beforeHandlers);
 		$this->dispatcher->setAfterHandlers($this->afterHandlers);
-		$response = new RoutingHandler(
+		$handler = new RoutingHandler(
 			$this->router,
 			$this->dispatcher,
 			$this->container,
-		)->handle($request);
+		);
+		$response = $this->errorHandler
+			? $this->errorHandler->process($request, $handler)
+			: $handler->handle($request);
 
 		return new Emitter()->emit($response) ? $response : false;
 	}

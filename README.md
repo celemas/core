@@ -17,6 +17,7 @@ It features:
 - Http Routing.
 - An autowiring container used for automatic dependency injection.
 - Middleware.
+- Error handling for PSR-15 request pipelines.
 - Convenience wrappers for PSR request, response and middleware.
 - Logging.
 

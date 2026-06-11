@@ -11,12 +11,6 @@
 	],
 	"minimum-stability": "dev",
 	"prefer-stable": true,
-	"authors": [
-		{
-			"name": "Ernst",
-			"email": "ernst@celemas.dev"
-		}
-	],
 	"homepage": "https://celemas.dev/core",
 	"require": {
 		"php": "^8.5",
@@ -26,7 +20,11 @@
 		"celemas/router": "^0.3.0",
 		"laminas/laminas-httphandlerrunner": "^2.4",
 		"psr/http-factory": "^1.0",
-		"psr/http-message-implementation": "^1.0"
+		"psr/http-message": "^1.1 || ^2.0",
+		"psr/http-message-implementation": "^1.0",
+		"psr/http-server-handler": "^1.0",
+		"psr/http-server-middleware": "^1.0",
+		"psr/log": "^3.0"
 	},
 	"require-dev": {
 		"celemas/dev": "^4.2",
