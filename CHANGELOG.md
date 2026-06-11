@@ -9,7 +9,7 @@
 
 ### Changed
 
-- Scoped PHP error conversion to handled requests by default; global PHP handlers now require explicit registration.
+- Scoped PHP error conversion to handled requests instead of registering global PHP handlers.
 - Mapped router not-found and method-not-allowed failures to core HTTP exceptions before rendering.
 - Declared the PSR HTTP server, HTTP message, and log interfaces used by runtime code as direct dependencies.
 

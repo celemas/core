@@ -12,7 +12,6 @@ use Celemas\Core\Tests\Fixtures\Error\TestRenderer;
 use DivisionByZeroError;
 use ErrorException;
 use Exception;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -219,45 +218,6 @@ final class ErrorHandlerTest extends TestCase
 
 		$this->assertSame(405, $response->getStatusCode());
 		$this->assertSame('<h1>405 Method Not Allowed</h1>', $output);
-	}
-
-	#[RunInSeparateProcess]
-	public function testEmitExceptionLogsInDebugMode(): void
-	{
-		$handler = new Handler($this->factory()->responseFactory(), debug: true);
-		$handler->renderer(new TestRenderer(), Throwable::class);
-		ob_start();
-
-		try {
-			$this->withoutErrorLog(static function () use ($handler): void {
-				$handler->emitException(new Exception('Boom'));
-			});
-			$output = ob_get_contents();
-		} finally {
-			ob_end_clean();
-		}
-
-		$this->assertSame(Exception::class . ' rendered without request Boom', $output);
-	}
-
-	#[RunInSeparateProcess]
-	public function testGlobalHandlersAreExplicitAndRestorable(): void
-	{
-		$handler = new Handler($this->factory()->responseFactory());
-		$handler->registerHandlers();
-		$handler->registerHandlers();
-		ob_start();
-
-		try {
-			$handler->emitException(new Exception('Boom'));
-			$output = ob_get_contents();
-		} finally {
-			ob_end_clean();
-			$handler->restoreHandlers();
-			$handler->restoreHandlers();
-		}
-
-		$this->assertSame('<h1>500 Internal Server Error</h1>', $output);
 	}
 
 	/** @param callable(): mixed $callback */

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Celemas\Core\Error;
 
-use Celemas\Core\Emitter;
 use Celemas\Core\Exception\HttpError;
 use Celemas\Core\Exception\HttpMethodNotAllowed;
 use Celemas\Core\Exception\HttpNotFound;
@@ -25,7 +24,6 @@ class Handler implements Middleware
 {
 	protected ?Logger $logger = null;
 	protected ?DebugHandler $debugHandler = null;
-	protected bool $handlersRegistered = false;
 
 	/** @var list<RendererEntry> */
 	protected array $renderers = [];
@@ -37,11 +35,6 @@ class Handler implements Middleware
 		protected readonly bool $debug = false,
 	) {}
 
-	public function __destruct()
-	{
-		$this->restoreHandlers();
-	}
-
 	public function debugHandler(DebugHandler $debugHandler): void
 	{
 		$this->debugHandler = $debugHandler;
@@ -50,35 +43,6 @@ class Handler implements Middleware
 	public function logger(?Logger $logger = null): void
 	{
 		$this->logger = $logger;
-	}
-
-	/**
-	 * Register global PHP error and exception handlers.
-	 *
-	 * Most applications should let {@see process()} scope the error handler to the
-	 * request instead. This method is for front controllers that need a last-resort
-	 * handler outside the PSR-15 pipeline.
-	 */
-	public function registerHandlers(): void
-	{
-		if ($this->handlersRegistered) {
-			return;
-		}
-
-		set_error_handler([$this, 'handleError'], E_ALL);
-		set_exception_handler([$this, 'emitException']);
-		$this->handlersRegistered = true;
-	}
-
-	public function restoreHandlers(): void
-	{
-		if (!$this->handlersRegistered) {
-			return;
-		}
-
-		restore_error_handler();
-		restore_exception_handler();
-		$this->handlersRegistered = false;
 	}
 
 	#[Override]
@@ -125,17 +89,6 @@ class Handler implements Middleware
 		}
 
 		return false;
-	}
-
-	public function emitException(Throwable $exception): void
-	{
-		$response = $this->response($exception, null);
-
-		if ($this->debug) {
-			$this->errorLog($exception);
-		}
-
-		new Emitter()->emit($response);
 	}
 
 	public function response(Throwable $exception, ?Request $request = null): Response
