@@ -132,7 +132,9 @@ final class ErrorHandlerTest extends TestCase
 	{
 		$handler = new Handler($this->factory()->responseFactory(), debug: true);
 		$handler->debugHandler(new TestDebugHandler());
-		$response = $handler->response(new DivisionByZeroError('test'));
+		$response = $this->withoutErrorLog(
+			static fn(): Response => $handler->response(new DivisionByZeroError('test')),
+		);
 
 		$this->assertSame(DivisionByZeroError::class . ' test', (string) $response->getBody());
 	}
@@ -227,7 +229,9 @@ final class ErrorHandlerTest extends TestCase
 		ob_start();
 
 		try {
-			$handler->emitException(new Exception('Boom'));
+			$this->withoutErrorLog(static function () use ($handler): void {
+				$handler->emitException(new Exception('Boom'));
+			});
 			$output = ob_get_contents();
 		} finally {
 			ob_end_clean();
@@ -254,5 +258,34 @@ final class ErrorHandlerTest extends TestCase
 		}
 
 		$this->assertSame('<h1>500 Internal Server Error</h1>', $output);
+	}
+
+	/** @param callable(): mixed $callback */
+	private function withoutErrorLog(callable $callback): mixed
+	{
+		$previous = ini_get('error_log');
+		$file = tempnam(sys_get_temp_dir(), 'core-error-log-');
+
+		if ($file === false) {
+			$this->fail('Could not create temporary error log file.');
+		}
+
+		// @mago-expect lint:no-ini-set
+		ini_set('error_log', $file);
+
+		try {
+			return $callback();
+		} finally {
+			if ($previous === false) {
+				ini_restore('error_log');
+			} else {
+				// @mago-expect lint:no-ini-set
+				ini_set('error_log', $previous);
+			}
+
+			if (is_file($file)) {
+				unlink($file);
+			}
+		}
 	}
 }
