@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests\Fixtures;
+namespace Celema\Core\Tests\Fixtures;
 
-use Celemas\Core\Factory\AbstractFactory;
+use Celema\Core\Factory\AbstractFactory;
 use LogicException;
 use Override;
 use Psr\Http\Message\ServerRequestInterface as ServerRequest;

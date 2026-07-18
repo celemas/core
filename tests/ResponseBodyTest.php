@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Exception\RuntimeException;
-use Celemas\Core\Response;
+use Celema\Core\Exception\RuntimeException;
+use Celema\Core\Response;
 
 final class ResponseBodyTest extends TestCase
 {

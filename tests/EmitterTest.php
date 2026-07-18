@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Emitter;
-use Celemas\Core\Response;
+use Celema\Core\Emitter;
+use Celema\Core\Response;
 
 final class EmitterTest extends TestCase
 {

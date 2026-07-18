@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests\Fixtures;
+namespace Celema\Core\Tests\Fixtures;
 
-use Celemas\Core\Factory\Nyholm;
-use Celemas\Core\Response;
+use Celema\Core\Factory\Nyholm;
+use Celema\Core\Response;
 
 class TestController
 {

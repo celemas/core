@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Response;
+use Celema\Core\Response;
 
 final class ResponseHeaderTest extends TestCase
 {

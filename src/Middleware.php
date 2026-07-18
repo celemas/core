@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core;
+namespace Celema\Core;
 
 use Override;
 use Psr\Http\Message\ResponseInterface;

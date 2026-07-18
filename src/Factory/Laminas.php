@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Factory;
+namespace Celema\Core\Factory;
 
-use Celemas\Core\Exception\RuntimeException;
+use Celema\Core\Exception\RuntimeException;
 use Laminas\Diactoros\RequestFactory;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\Diactoros\ServerRequestFactory;

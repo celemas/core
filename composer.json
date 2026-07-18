@@ -1,23 +1,23 @@
 {
-	"name": "celemas/core",
-	"description": "Celemas core web framework",
+	"name": "celema/core",
+	"description": "Celema core web framework",
 	"type": "library",
 	"license": "MIT",
 	"authors": [
 		{
 			"name": "Ernst",
-			"email": "ernst@celemas.dev"
+			"email": "ernst@celema.dev"
 		}
 	],
 	"minimum-stability": "dev",
 	"prefer-stable": true,
-	"homepage": "https://celemas.dev/core",
+	"homepage": "https://celema.dev/core",
 	"require": {
 		"php": "^8.5",
 		"ext-fileinfo": "*",
-		"celemas/cli": "^0.2.0",
-		"celemas/container": "^0.4.0",
-		"celemas/router": "^0.3.0",
+		"celema/console": "^0.3",
+		"celema/container": "^0.5",
+		"celema/router": "^0.4",
 		"laminas/laminas-httphandlerrunner": "^2.4",
 		"psr/http-factory": "^1.0",
 		"psr/http-message": "^1.1 || ^2.0",
@@ -27,7 +27,7 @@
 		"psr/log": "^3.0"
 	},
 	"require-dev": {
-		"celemas/dev": "^4.2",
+		"celema/dev": "^5.0",
 		"guzzlehttp/psr7": "^2",
 		"laminas/laminas-diactoros": "^2 || ^3",
 		"nyholm/psr7": "^1.5",
@@ -35,19 +35,19 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Celemas\\Core\\": "src"
+			"Celema\\Core\\": "src"
 		}
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"Celemas\\Core\\Tests\\": "tests"
+			"Celema\\Core\\Tests\\": "tests"
 		}
 	},
 	"scripts": {
 		"test": "./vendor/bin/phpunit --testdox --no-coverage --colors=always",
 		"types": "./vendor/bin/psalm --no-cache",
 		"docs:format": "npx prettier@3.6.2 --write --config ./docs/.prettierrc README.md CHANGELOG.md LICENSE.md docs/",
-		"docs:lint": "npx markdownlint-cli2@0.22.1 --config ./vendor/celemas/dev/config/markdownlint.jsonc README.md CHANGELOG.md LICENSE.md docs/",
+		"docs:lint": "npx markdownlint-cli2@0.22.1 --config ./vendor/celema/dev/config/markdownlint.jsonc README.md CHANGELOG.md LICENSE.md docs/",
 		"lint": [
 			"./vendor/bin/mago fmt --check",
 			"./vendor/bin/mago lint"

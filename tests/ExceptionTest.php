@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Exception\HttpBadRequest;
-use Celemas\Core\Exception\HttpConflict;
-use Celemas\Core\Exception\HttpForbidden;
-use Celemas\Core\Exception\HttpGone;
-use Celemas\Core\Exception\HttpMethodNotAllowed;
-use Celemas\Core\Exception\HttpNotFound;
-use Celemas\Core\Exception\HttpUnauthorized;
-use Celemas\Core\Request;
+use Celema\Core\Exception\HttpBadRequest;
+use Celema\Core\Exception\HttpConflict;
+use Celema\Core\Exception\HttpForbidden;
+use Celema\Core\Exception\HttpGone;
+use Celema\Core\Exception\HttpMethodNotAllowed;
+use Celema\Core\Exception\HttpNotFound;
+use Celema\Core\Exception\HttpUnauthorized;
+use Celema\Core\Request;
 use ReflectionMethod;
 use stdClass;
 

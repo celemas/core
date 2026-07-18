@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Exception;
+namespace Celema\Core\Exception;
 
-use Celemas\Core\Request;
+use Celema\Core\Request;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface as PsrServerRequest;
 use Throwable;

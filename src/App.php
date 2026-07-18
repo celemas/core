@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core;
+namespace Celema\Core;
 
-use Celemas\Container\Container;
-use Celemas\Container\Entry;
-use Celemas\Core\Error\Handler as ErrorHandler;
-use Celemas\Core\Factory\Discovery;
-use Celemas\Core\Factory\Factory;
-use Celemas\Router\AddsBeforeAfter;
-use Celemas\Router\AddsRoutes;
-use Celemas\Router\Dispatcher;
-use Celemas\Router\Route;
-use Celemas\Router\RouteAdder;
-use Celemas\Router\Router;
-use Celemas\Router\RoutingHandler;
+use Celema\Container\Container;
+use Celema\Container\Entry;
+use Celema\Core\Error\Handler as ErrorHandler;
+use Celema\Core\Factory\Discovery;
+use Celema\Core\Factory\Factory;
+use Celema\Router\AddsBeforeAfter;
+use Celema\Router\AddsRoutes;
+use Celema\Router\Dispatcher;
+use Celema\Router\Route;
+use Celema\Router\RouteAdder;
+use Celema\Router\Router;
+use Celema\Router\RoutingHandler;
 use Closure;
 use Override;
 use Psr\Container\ContainerInterface as PsrContainer;

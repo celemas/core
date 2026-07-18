@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Middleware;
-use Celemas\Core\Request;
-use Celemas\Core\Response;
+use Celema\Core\Middleware;
+use Celema\Core\Request;
+use Celema\Core\Response;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use Psr\Http\Message\ResponseInterface;

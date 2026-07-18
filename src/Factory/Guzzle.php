@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Factory;
+namespace Celema\Core\Factory;
 
-use Celemas\Core\Exception\RuntimeException;
+use Celema\Core\Exception\RuntimeException;
 use GuzzleHttp\Psr7\HttpFactory;
 use GuzzleHttp\Psr7\ServerRequest;
 use Override;

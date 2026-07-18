@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\App;
-use Celemas\Router\Group;
-use Celemas\Router\Route;
+use Celema\Core\App;
+use Celema\Router\Group;
+use Celema\Router\Route;
 
 final class AppRoutingTest extends TestCase
 {

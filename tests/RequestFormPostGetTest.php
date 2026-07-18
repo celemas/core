@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Exception\OutOfBoundsException;
-use Celemas\Core\Request;
+use Celema\Core\Exception\OutOfBoundsException;
+use Celema\Core\Request;
 
 final class RequestFormPostGetTest extends TestCase
 {

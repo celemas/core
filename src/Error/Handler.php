@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Error;
+namespace Celema\Core\Error;
 
-use Celemas\Core\Exception\HttpError;
-use Celemas\Core\Exception\HttpMethodNotAllowed;
-use Celemas\Core\Exception\HttpNotFound;
-use Celemas\Core\Server\Console as ServerConsole;
-use Celemas\Router\Exception\MethodNotAllowedException;
-use Celemas\Router\Exception\NotFoundException;
+use Celema\Core\Exception\HttpError;
+use Celema\Core\Exception\HttpMethodNotAllowed;
+use Celema\Core\Exception\HttpNotFound;
+use Celema\Core\Server\Console as ServerConsole;
+use Celema\Router\Exception\MethodNotAllowedException;
+use Celema\Router\Exception\NotFoundException;
 use ErrorException;
 use Override;
 use Psr\Http\Message\ResponseFactoryInterface as ResponseFactory;

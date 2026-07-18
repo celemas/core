@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Error\Handler;
-use Celemas\Core\Exception\HttpNotFound;
-use Celemas\Core\Response as CoreResponse;
-use Celemas\Core\Server\Console;
-use Celemas\Core\Tests\Fixtures\Error\TestDebugHandler;
-use Celemas\Core\Tests\Fixtures\Error\TestRenderer;
+use Celema\Core\Error\Handler;
+use Celema\Core\Exception\HttpNotFound;
+use Celema\Core\Response as CoreResponse;
+use Celema\Core\Server\Console;
+use Celema\Core\Tests\Fixtures\Error\TestDebugHandler;
+use Celema\Core\Tests\Fixtures\Error\TestRenderer;
 use DivisionByZeroError;
 use ErrorException;
 use Exception;
@@ -250,8 +250,8 @@ final class ErrorHandlerTest extends TestCase
 	/** @param callable(): void $callback */
 	private function withCliServer(callable $callback): void
 	{
-		$oldValue = $_SERVER['CELEMAS_CLI_SERVER'] ?? null;
-		$_SERVER['CELEMAS_CLI_SERVER'] = '1';
+		$oldValue = $_SERVER['CELEMA_CLI_SERVER'] ?? null;
+		$_SERVER['CELEMA_CLI_SERVER'] = '1';
 
 		try {
 			$callback();
@@ -259,9 +259,9 @@ final class ErrorHandlerTest extends TestCase
 			Console::clearException();
 
 			if ($oldValue === null) {
-				unset($_SERVER['CELEMAS_CLI_SERVER']);
+				unset($_SERVER['CELEMA_CLI_SERVER']);
 			} else {
-				$_SERVER['CELEMAS_CLI_SERVER'] = $oldValue;
+				$_SERVER['CELEMA_CLI_SERVER'] = $oldValue;
 			}
 		}
 	}

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Container\Container;
-use Celemas\Core\App;
-use Celemas\Core\Factory\Factory;
-use Celemas\Core\Factory\Nyholm;
-use Celemas\Core\Plugin;
-use Celemas\Core\Tests\Fixtures\TestContainer;
-use Celemas\Core\Tests\Fixtures\TestLogger;
-use Celemas\Router\Router;
+use Celema\Container\Container;
+use Celema\Core\App;
+use Celema\Core\Factory\Factory;
+use Celema\Core\Factory\Nyholm;
+use Celema\Core\Plugin;
+use Celema\Core\Tests\Fixtures\TestContainer;
+use Celema\Core\Tests\Fixtures\TestLogger;
+use Celema\Router\Router;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;

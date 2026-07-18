@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core;
+namespace Celema\Core;
 
-use Celemas\Core\Exception\OutOfBoundsException;
-use Celemas\Core\Exception\RuntimeException;
-use Celemas\Router\RequestWrapper;
+use Celema\Core\Exception\OutOfBoundsException;
+use Celema\Core\Exception\RuntimeException;
+use Celema\Router\RequestWrapper;
 use Override;
 use Psr\Http\Message\ServerRequestInterface as PsrServerRequest;
 use Psr\Http\Message\StreamInterface as PsrStream;

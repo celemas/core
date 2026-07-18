@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Factory;
+namespace Celema\Core\Factory;
 
-use Celemas\Core\Exception\ValueError;
+use Celema\Core\Exception\ValueError;
 use Override;
 use Psr\Http\Message\RequestFactoryInterface as Requestfactory;
 use Psr\Http\Message\RequestInterface as Request;

@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Exception;
+namespace Celema\Core\Exception;
 
 final class OutOfBoundsException extends RuntimeException implements CoreException {}

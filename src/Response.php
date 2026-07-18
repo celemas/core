@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core;
+namespace Celema\Core;
 
-use Celemas\Core\Exception\FileNotFoundException;
-use Celemas\Core\Exception\RuntimeException;
-use Celemas\Core\Factory\Factory;
-use Celemas\Router\ResponseWrapper;
+use Celema\Core\Exception\FileNotFoundException;
+use Celema\Core\Exception\RuntimeException;
+use Celema\Core\Factory\Factory;
+use Celema\Router\ResponseWrapper;
 use finfo;
 use Override;
 use Psr\Http\Message\ResponseInterface as PsrResponse;

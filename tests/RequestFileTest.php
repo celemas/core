@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Exception\OutOfBoundsException;
-use Celemas\Core\Exception\RuntimeException;
-use Celemas\Core\Request;
+use Celema\Core\Exception\OutOfBoundsException;
+use Celema\Core\Exception\RuntimeException;
+use Celema\Core\Request;
 use Psr\Http\Message\UploadedFileInterface as PsrUploadedFile;
 
 final class RequestFileTest extends TestCase

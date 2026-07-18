@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests\Fixtures;
+namespace Celema\Core\Tests\Fixtures;
 
 use Exception;
 use Psr\Container\ContainerInterface;

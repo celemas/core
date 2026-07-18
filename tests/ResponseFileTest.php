@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Exception\FileNotFoundException;
-use Celemas\Core\Response;
+use Celema\Core\Exception\FileNotFoundException;
+use Celema\Core\Response;
 
 final class ResponseFileTest extends TestCase
 {

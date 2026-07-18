@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Error;
+namespace Celema\Core\Error;
 
 use Throwable;
 

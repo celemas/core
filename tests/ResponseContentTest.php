@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Core\Tests;
+namespace Celema\Core\Tests;
 
-use Celemas\Core\Exception\RuntimeException;
-use Celemas\Core\Response;
+use Celema\Core\Exception\RuntimeException;
+use Celema\Core\Response;
 use stdClass;
 
 final class ResponseContentTest extends TestCase
