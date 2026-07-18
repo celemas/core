@@ -1,10 +1,18 @@
 # Changelog
 
-## [Unreleased](https://codeberg.org/celemas/core/compare/0.4.0...HEAD)
+## [Unreleased](https://codeberg.org/celema/core/compare/0.4.0...HEAD)
 
-No notable changes since the last release.
+### Changed
 
-## [0.4.0](https://codeberg.org/celemas/core/src/tag/0.4.0) (2026-06-11)
+- Renamed the Composer package to `celema/core` and moved PHP classes from `Celemas\Core` to `Celema\Core`.
+- Updated integrations to `celema/console:^0.3`, `celema/container:^0.5`, and `celema/router:^0.4`, with their corresponding `Celema` namespaces.
+- Renamed the built-in development server environment variables from the `CELEMAS_` prefix to `CELEMA_`.
+
+### Removed
+
+- Removed the previous Composer package name, PHP namespaces, and development server environment variable names; consumers must update their dependencies and integrations.
+
+## [0.4.0](https://codeberg.org/celema/core/src/tag/0.4.0) (2026-06-11)
 
 ### Added
 
@@ -19,7 +27,7 @@ No notable changes since the last release.
 - Mapped router not-found and method-not-allowed failures to core HTTP exceptions before rendering.
 - Declared the PSR HTTP server, HTTP message, and log interfaces used by runtime code as direct dependencies.
 
-## [0.3.0](https://codeberg.org/celemas/core/src/tag/0.3.0) (2026-06-09)
+## [0.3.0](https://codeberg.org/celema/core/src/tag/0.3.0) (2026-06-09)
 
 ### Breaking
 
@@ -40,7 +48,7 @@ No notable changes since the last release.
 
 - Improved development server startup by validating port values and reporting unavailable ports before launching PHP or BrowserSync.
 
-## [0.2.0](https://codeberg.org/celemas/core/src/tag/0.2.0) (2026-02-21)
+## [0.2.0](https://codeberg.org/celema/core/src/tag/0.2.0) (2026-02-21)
 
 Codename: Jonas
 
@@ -48,7 +56,7 @@ Codename: Jonas
 
 - BREAKING: Replaced `celemas/registry` dependency with `celemas/container`. The `Registry` class is now `Container` (`Celemas\Container\Container`), and `App::registry()` is now `App::container()`.
 
-## [0.1.0](https://codeberg.org/celemas/core/src/tag/0.1.0) (2026-01-31)
+## [0.1.0](https://codeberg.org/celema/core/src/tag/0.1.0) (2026-01-31)
 
 Initial release.
 
