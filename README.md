@@ -1,14 +1,14 @@
-# Celemas Core Framework
+# Celema Core Framework
 
 <!-- prettier-ignore-start -->
-[![ci](https://codeberg.org/celemas/core/badges/workflows/ci.yml/badge.svg?style=flat&logo=codeberg&logoColor=white&label=ci)](https://codeberg.org/celemas/core/actions)
-[![code coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fcore%2Fcode%2Fbadge.json)](https://cov.celemas.dev/celemas/core/code)
-[![type coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fcore%2Ftypes%2Fbadge-cover.json)](https://cov.celemas.dev/celemas/core/types)
-[![psalm level](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fcore%2Ftypes%2Fbadge-level.json)](https://cov.celemas.dev/celemas/core/types)
+[![ci](https://codeberg.org/celema/core/badges/workflows/ci.yml/badge.svg?style=flat&logo=codeberg&logoColor=white&label=ci)](https://codeberg.org/celema/core/actions)
+[![code coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fcore%2Fcode%2Fbadge.json)](https://cov.celema.dev/celema/core/code)
+[![type coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fcore%2Ftypes%2Fbadge-cover.json)](https://cov.celema.dev/celema/core/types)
+[![psalm level](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fcore%2Ftypes%2Fbadge-level.json)](https://cov.celema.dev/celema/core/types)
 [![Software License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 <!-- prettier-ignore-end -->
 
-Celemas Core is a lightweight and easily extendable >=PHP 8.3 web framework.
+Celema Core is a lightweight and easily extendable PHP 8.5+ web framework.
 
 > [!WARNING] This library is under active development, some of its features are still experimental and subject to change. Large parts of the documentation are missing.
 
@@ -26,8 +26,8 @@ It features:
 `App` exposes the router's common route helpers and runs requests through the router `RoutingHandler` internally.
 
 ```php
-use Celemas\Core\App;
-use Celemas\Router\Group;
+use Celema\Core\App;
+use Celema\Router\Group;
 
 $app = App::create();
 

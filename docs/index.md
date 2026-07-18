@@ -2,7 +2,7 @@
 title: Introduction
 ---
 
-# Celemas Core
+# Celema Core
 
 !!! warn "Note" This library is under active development, some of its features are still experimental and subject to change. Large parts of the documentation are missing.
 
