@@ -2,7 +2,9 @@
 
 ## [Unreleased](https://codeberg.org/celema/core/compare/0.5.0...HEAD)
 
-No notable changes since the last release.
+### Breaking
+
+- Adopted the attribute-based command API of `celema/console` 0.4. `Server` is now a plain `#[Command]` class invoked via `__invoke(Args $args, Io $io)`; its options are documented via `#[Opt]` attributes instead of a `help()` method.
 
 ## [0.5.0](https://codeberg.org/celema/core/src/tag/0.5.0) (2026-07-18)
 
