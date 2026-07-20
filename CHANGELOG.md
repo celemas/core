@@ -15,6 +15,7 @@
 
 - The dev server request log also hides the PHP server's connection and request lines for IPv6 clients; previously only IPv4 lines were hidden, so connecting via `::1` leaked `Accepted`/`Closing` noise into the log.
 - The dev server no longer runs `stty` on Windows or without a terminal, so `stty: stdin isn't a terminal` no longer leaks into the server output when the command runs non-interactively.
+- The `server` command reports startup failures — an unavailable port, invalid options, missing BrowserSync dependencies, a failed process spawn — in red on stderr and exits with `1`; previously the message went to stdout and the command exited with `0`.
 
 ## [0.5.0](https://codeberg.org/celema/core/src/tag/0.5.0) (2026-07-18)
 
