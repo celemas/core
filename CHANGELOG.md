@@ -8,7 +8,8 @@
 
 ### Changed
 
-- The dev server prints its own messages — the listening banners and the Xdebug session notice — through the console `Io` with inline markup, honoring `NO_COLOR`, `FORCE_COLOR`, and terminal detection, instead of raw `echo` with hardcoded escape codes. The relayed PHP server and BrowserSync output is still piped through verbatim.
+- The dev server prints its own messages — the listening banners and the Xdebug session notice — through the console `Io` with inline markup, honoring `NO_COLOR`, `FORCE_COLOR`, and terminal detection, instead of raw `echo` with hardcoded escape codes.
+- The dev-server request log is rendered by the `server` command itself: the CLI router reports each request as a plain structured line, and the parent formats and colors it through the console `Io`, so the request log honors `NO_COLOR`, `FORCE_COLOR`, and terminal detection too. Request paths and all other relayed PHP server output are escaped, so request URLs and error messages can no longer inject terminal escape sequences; BrowserSync output still passes through verbatim. The `CELEMA_TERMINAL_COLUMNS` environment variable is gone — the terminal width is measured in the server command — and `--filter` now matches against the decoded request path instead of the colored log line.
 
 ### Fixed
 
