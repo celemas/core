@@ -15,7 +15,7 @@
 	"require": {
 		"php": "^8.5",
 		"ext-fileinfo": "*",
-		"celema/console": "^0.4",
+		"celema/console": "^0.5",
 		"celema/container": "^0.5",
 		"celema/router": "^0.4",
 		"laminas/laminas-httphandlerrunner": "^2.4",
