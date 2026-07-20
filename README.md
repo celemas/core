@@ -44,6 +44,15 @@ $app->group('/admin', function (Group $admin) use ($auth): void {
 });
 ```
 
+## Development servers
+
+Core provides two console command classes for local development:
+
+- `Celema\Core\Server\Server` runs the application with the PHP CLI's built-in server.
+- `Celema\Core\Server\FrankenPhp` runs it with the `frankenphp` executable from `PATH`.
+
+Register either class with `celema/console` using a factory that supplies the application's public directory. Both commands support host, port, request-log filtering, and BrowserSync-backed `--watch` mode. The FrankenPHP command uses classic mode, not worker mode; its `--debug` option enables verbose Caddy logs. FrankenPHP embeds its own PHP runtime, extensions, and configuration rather than using the PHP CLI that starts the command.
+
 Supported PSRs:
 
 - PSR-3 Logger Interface

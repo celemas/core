@@ -6,6 +6,10 @@
 
 - Adopted the attribute-based command API of `celema/console` 0.5. `Server` is now a plain `#[Command]` class invoked via `__invoke(Args $args, Io $io)`; its options are documented via `#[Opt]` attributes instead of a `help()` method.
 
+### Added
+
+- Added the `FrankenPhp` development-server command for running applications with a `frankenphp` executable from `PATH`. It uses FrankenPHP classic mode, renders Caddy's JSON access log through the existing console request display, reports handled Core exceptions, supports BrowserSync watch mode, and generates a temporary Caddyfile only when a configured route prefix needs custom routing.
+
 ### Changed
 
 - The dev server prints its own messages — the listening banners and the Xdebug session notice — through the console `Io` with inline markup, honoring `NO_COLOR`, `FORCE_COLOR`, and terminal detection, instead of raw `echo` with hardcoded escape codes.
