@@ -4,7 +4,11 @@
 
 ### Breaking
 
-- Adopted the attribute-based command API of `celema/console` 0.4. `Server` is now a plain `#[Command]` class invoked via `__invoke(Args $args, Io $io)`; its options are documented via `#[Opt]` attributes instead of a `help()` method.
+- Adopted the attribute-based command API of `celema/console` 0.5. `Server` is now a plain `#[Command]` class invoked via `__invoke(Args $args, Io $io)`; its options are documented via `#[Opt]` attributes instead of a `help()` method.
+
+### Changed
+
+- The dev server prints its own messages — the listening banners and the Xdebug session notice — through the console `Io` with inline markup, honoring `NO_COLOR`, `FORCE_COLOR`, and terminal detection, instead of raw `echo` with hardcoded escape codes. The relayed PHP server and BrowserSync output is still piped through verbatim.
 
 ## [0.5.0](https://codeberg.org/celema/core/src/tag/0.5.0) (2026-07-18)
 
