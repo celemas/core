@@ -15,7 +15,7 @@
 	"require": {
 		"php": "^8.5",
 		"ext-fileinfo": "*",
-		"celema/console": "dev-main",
+		"celema/console": "^0.4",
 		"celema/container": "^0.5",
 		"celema/router": "^0.4",
 		"laminas/laminas-httphandlerrunner": "^2.4",
@@ -64,13 +64,5 @@
 			"composer types",
 			"composer docs:lint"
 		]
-	},
-	"repositories": [{
-		"name": "console",
-		"type": "path",
-		"url": "../console",
-		"options": {
-			"symlink": true
-		}
-	}]
+	}
 }
