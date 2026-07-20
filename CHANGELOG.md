@@ -10,6 +10,10 @@
 
 - The dev server prints its own messages — the listening banners and the Xdebug session notice — through the console `Io` with inline markup, honoring `NO_COLOR`, `FORCE_COLOR`, and terminal detection, instead of raw `echo` with hardcoded escape codes. The relayed PHP server and BrowserSync output is still piped through verbatim.
 
+### Fixed
+
+- The dev server request log also hides the PHP server's connection and request lines for IPv6 clients; previously only IPv4 lines were hidden, so connecting via `::1` leaked `Accepted`/`Closing` noise into the log.
+
 ## [0.5.0](https://codeberg.org/celema/core/src/tag/0.5.0) (2026-07-18)
 
 ### Changed
