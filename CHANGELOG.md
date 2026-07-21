@@ -10,6 +10,8 @@
 
 - Added the `FrankenPhp` development-server command for running applications with a `frankenphp` executable from `PATH`. It uses FrankenPHP classic mode, renders Caddy's JSON access log through the existing console request display, reports handled Core exceptions, supports BrowserSync watch mode, and generates a temporary Caddyfile only when a configured route prefix needs custom routing.
 
+- The `Server` command accepts a custom PHP executable via its `executable` constructor parameter, mirroring the `FrankenPhp` command.
+
 ### Changed
 
 - The BrowserSync backend port is now ten times the public port (`1983` → `19830`), falling back to the public port plus `10000` when that would exceed `65535`, and moves upward from there until a free port is found. Previously the backend ran on the public port plus one, which commonly collides with a neighboring Vite dev server.
