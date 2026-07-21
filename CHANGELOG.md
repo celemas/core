@@ -14,6 +14,7 @@
 
 ### Changed
 
+- FrankenPHP now prints handled exception details after the corresponding request log line instead of before it.
 - The PHP and FrankenPHP request logs now dim their timestamps and request durations.
 - The BrowserSync backend port is now ten times the public port (`1983` → `19830`), falling back to the public port plus `10000` when that would exceed `65535`, and moves upward from there until a free port is found. Previously the backend ran on the public port plus one, which commonly collides with a neighboring Vite dev server.
 - The dev server prints its own messages — the listening banners and the Xdebug session notice — through the console `Io` with inline markup, honoring `NO_COLOR`, `FORCE_COLOR`, and terminal detection, instead of raw `echo` with hardcoded escape codes.
