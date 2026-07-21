@@ -53,6 +53,17 @@ Core provides two console command classes for local development:
 
 Register either class with `celema/console` using a factory that supplies the application's public directory. Both commands support host, port, request-log filtering, and BrowserSync-backed `--watch` mode. The FrankenPHP command uses classic mode, not worker mode; its `--debug` option enables verbose Caddy logs. FrankenPHP embeds its own PHP runtime, extensions, and configuration rather than using the PHP CLI that starts the command.
 
+### Development example
+
+The repository's example app exercises routing, autowiring, request and response helpers, middleware, error handling, static assets, and request-log states. Run it on port `1973` with either development server:
+
+```bash
+./app/run server
+./app/run frankenphp
+```
+
+Add `--watch` to run BrowserSync and reload when the example or Core source changes.
+
 Supported PSRs:
 
 - PSR-3 Logger Interface

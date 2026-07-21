@@ -41,6 +41,7 @@
 	},
 	"autoload-dev": {
 		"psr-4": {
+			"Celema\\Core\\Example\\": "app/src",
 			"Celema\\Core\\Tests\\": "tests"
 		}
 	},

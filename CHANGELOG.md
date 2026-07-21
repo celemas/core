@@ -8,8 +8,8 @@
 
 ### Added
 
+- Added a development-only example app with routes for checking Core's routing, autowiring, HTTP helpers, middleware, error handling, static assets, and PHP or FrankenPHP development-server output.
 - Added the `FrankenPhp` development-server command for running applications with a `frankenphp` executable from `PATH`. It uses FrankenPHP classic mode, renders Caddy's JSON access log through the existing console request display, reports handled Core exceptions, supports BrowserSync watch mode, and generates a temporary Caddyfile only when a configured route prefix needs custom routing.
-
 - The `Server` command accepts a custom PHP executable via its `executable` constructor parameter, mirroring the `FrankenPhp` command.
 
 ### Changed
