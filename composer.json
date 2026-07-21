@@ -29,7 +29,7 @@
 	},
 	"require-dev": {
 		"celema/dev": "^5.0",
-		"guzzlehttp/psr7": "^2",
+		"guzzlehttp/psr7": "^2 || ^3",
 		"laminas/laminas-diactoros": "^2 || ^3",
 		"nyholm/psr7": "^1.5",
 		"nyholm/psr7-server": "^1"
