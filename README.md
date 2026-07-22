@@ -65,6 +65,44 @@ The repository's example app exercises routing, autowiring, request and response
 
 Add `--watch` to run BrowserSync and reload when the example or Core source changes. Both commands support host, port, request-log filtering, and BrowserSync-backed `--watch` mode.
 
+## PSR-7 implementation
+
+`App::create()` uses [nyholm/psr7](https://github.com/Nyholm/psr7) as its PSR-7/PSR-17 implementation:
+
+```bash
+composer require nyholm/psr7 nyholm/psr7-server
+```
+
+Any other implementation works through a custom `Celema\Core\Factory\Factory`. Extend `AbstractFactory`, assign the implementation's PSR-17 factories, and pass an instance to the `App` constructor:
+
+```php
+use Celema\Core\Factory\AbstractFactory;
+use GuzzleHttp\Psr7\HttpFactory;
+use GuzzleHttp\Psr7\ServerRequest;
+use Psr\Http\Message\ServerRequestInterface;
+
+class Guzzle extends AbstractFactory
+{
+	public function __construct()
+	{
+		$factory = new HttpFactory();
+		$this->requestFactory = $factory;
+		$this->responseFactory = $factory;
+		$this->serverRequestFactory = $factory;
+		$this->streamFactory = $factory;
+		$this->uploadedFileFactory = $factory;
+		$this->uriFactory = $factory;
+	}
+
+	public function serverRequest(): ServerRequestInterface
+	{
+		return ServerRequest::fromGlobals();
+	}
+}
+
+$app = new App(new Guzzle(), new Router(), new Container());
+```
+
 Supported PSRs:
 
 - PSR-3 Logger Interface

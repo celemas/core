@@ -4,6 +4,7 @@
 
 ### Breaking
 
+- Removed the `Guzzle` and `Laminas` PSR-17 factories and the `Discovery` class. `Nyholm` is the only built-in factory; `App::create()` uses it directly and reports a clear error when `nyholm/psr7` and `nyholm/psr7-server` are missing. Other PSR-7 implementations remain usable through a custom `Celema\Core\Factory\Factory` implementation passed to the `App` constructor.
 - Extracted the development server into the standalone `celema/server` package. The `Celema\Core\Server` namespace is gone; the commands now live in `Celema\Server`. Core no longer depends on `celema/console`, and the error handler reports handled server errors to the development server only when `celema/server` is installed.
 - Adopted the attribute-based command API of `celema/console` 0.5. `Server` is now a plain `#[Command]` class invoked via `__invoke(Args $args, Io $io)`; its options are documented via `#[Opt]` attributes instead of a `help()` method.
 

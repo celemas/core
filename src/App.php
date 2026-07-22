@@ -7,8 +7,8 @@ namespace Celema\Core;
 use Celema\Container\Container;
 use Celema\Container\Entry;
 use Celema\Core\Error\Handler as ErrorHandler;
-use Celema\Core\Factory\Discovery;
 use Celema\Core\Factory\Factory;
+use Celema\Core\Factory\Nyholm;
 use Celema\Router\AddsBeforeAfter;
 use Celema\Router\AddsRoutes;
 use Celema\Router\Dispatcher;
@@ -50,7 +50,7 @@ class App implements RouteAdder
 	public static function create(?PsrContainer $container = null): self
 	{
 		return new self(
-			Discovery::create(),
+			new Nyholm(),
 			new Router(),
 			new Container(container: $container),
 		);

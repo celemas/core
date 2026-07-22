@@ -29,10 +29,12 @@
 	"require-dev": {
 		"celema/dev": "^5.0",
 		"celema/server": "dev-main",
-		"guzzlehttp/psr7": "^2",
-		"laminas/laminas-diactoros": "^2 || ^3",
 		"nyholm/psr7": "^1.5",
 		"nyholm/psr7-server": "^1"
+	},
+	"suggest": {
+		"nyholm/psr7": "Default PSR-7/PSR-17 implementation used by App::create()",
+		"nyholm/psr7-server": "Required alongside nyholm/psr7 for the default factory"
 	},
 	"autoload": {
 		"psr-4": {
