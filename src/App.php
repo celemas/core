@@ -6,6 +6,8 @@ namespace Celema\Core;
 
 use Celema\Container\Container;
 use Celema\Container\Entry;
+use Celema\Core\Emitter\Emitter;
+use Celema\Core\Emitter\Sapi;
 use Celema\Core\Error\Handler as ErrorHandler;
 use Celema\Core\Factory\Factory;
 use Celema\Core\Factory\Nyholm;
@@ -32,6 +34,7 @@ class App implements RouteAdder
 
 	protected readonly Dispatcher $dispatcher;
 	protected ?ErrorHandler $errorHandler = null;
+	protected Emitter $emitter;
 
 	public function __construct(
 		protected readonly Factory $factory,
@@ -39,6 +42,7 @@ class App implements RouteAdder
 		protected readonly Container $container,
 	) {
 		$this->dispatcher = new Dispatcher();
+		$this->emitter = new Sapi();
 		$this->initializeContainer();
 	}
 
@@ -103,6 +107,15 @@ class App implements RouteAdder
 		return $this->errorHandler;
 	}
 
+	public function emitter(?Emitter $emitter = null): Emitter
+	{
+		if ($emitter !== null) {
+			$this->emitter = $emitter;
+		}
+
+		return $this->emitter;
+	}
+
 	public function middleware(Middleware ...$middleware): void
 	{
 		$this->dispatcher->middleware(...$middleware);
@@ -154,6 +167,6 @@ class App implements RouteAdder
 			? $this->errorHandler->process($request, $handler)
 			: $handler->handle($request);
 
-		return new Emitter()->emit($response) ? $response : false;
+		return $this->emitter->emit($response, $request->getMethod() === 'HEAD') ? $response : false;
 	}
 }

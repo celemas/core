@@ -6,6 +6,8 @@ namespace Celema\Core\Tests;
 
 use Celema\Container\Container;
 use Celema\Core\App;
+use Celema\Core\Emitter\Emitter;
+use Celema\Core\Emitter\Sapi;
 use Celema\Core\Factory\Factory;
 use Celema\Core\Factory\Nyholm;
 use Celema\Core\Plugin;
@@ -83,6 +85,44 @@ final class AppTest extends TestCase
 		ob_end_clean();
 
 		$this->assertSame('text', $output);
+	}
+
+	public function testAppRunHeadRequest(): void
+	{
+		$app = $this->app();
+		$app->any('/', [Fixtures\TestController::class, 'textView']);
+		ob_start();
+		$response = $app->run($this->request(['REQUEST_METHOD' => 'HEAD']));
+		$output = ob_get_contents();
+		ob_end_clean();
+
+		$this->assertSame('', $output);
+		$this->assertInstanceOf(ResponseInterface::class, $response);
+	}
+
+	public function testEmitter(): void
+	{
+		$app = $this->app();
+
+		$this->assertInstanceOf(Sapi::class, $app->emitter());
+
+		$emitter = new class implements Emitter {
+			public bool $emitted = false;
+
+			public function emit(ResponseInterface $response, bool $withoutBody = false): bool
+			{
+				$this->emitted = true;
+
+				return true;
+			}
+		};
+		$app->emitter($emitter);
+		$app->any('/', [Fixtures\TestController::class, 'textView']);
+		$response = $app->run($this->request());
+
+		$this->assertSame($emitter, $app->emitter());
+		$this->assertSame(true, $emitter->emitted);
+		$this->assertInstanceOf(ResponseInterface::class, $response);
 	}
 
 	public function testAppRegisterHelper(): void
