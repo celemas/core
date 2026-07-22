@@ -116,3 +116,5 @@ Supported PSRs:
 ## License
 
 This project is licensed under the [MIT license](LICENSE.md).
+
+The built-in SAPI emitter is derived from [laminas/laminas-httphandlerrunner](https://github.com/laminas/laminas-httphandlerrunner) (BSD-3-Clause); see the third-party code section in [LICENSE.md](LICENSE.md).

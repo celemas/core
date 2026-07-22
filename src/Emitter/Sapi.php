@@ -9,7 +9,13 @@ use Override;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\StreamInterface as Stream;
 
-/** @api */
+/**
+ * Derived from the SAPI emitters of laminas/laminas-httphandlerrunner,
+ * copyright (c) 2020 Laminas Project a Series of LF Projects, LLC,
+ * distributed under the BSD-3-Clause license. See LICENSE.md.
+ *
+ * @api
+ */
 final class Sapi implements Emitter
 {
 	public function __construct(
