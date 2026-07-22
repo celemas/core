@@ -26,6 +26,7 @@ cyclomatic-complexity = { enabled = false }
 excessive-parameter-list = { exclude = ["tests"] }
 function-name = { camel = true }
 halstead = { enabled = false }
+kan-defect = { enabled = false }
 literal-named-argument = { enabled = false }
 no-boolean-flag-parameter = { enabled = false }
 no-else-clause = { enabled = false }
