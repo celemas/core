@@ -209,7 +209,6 @@ class Handler implements Middleware
 	{
 		// The celema/server dev server is an optional dependency; report
 		// handled server errors to its request log when it is installed.
-		/** @psalm-suppress UndefinedClass */
 		if ($this->status($exception) >= 500 && class_exists(ServerConsole::class)) {
 			ServerConsole::recordException($exception, trace: $this->debug);
 		}

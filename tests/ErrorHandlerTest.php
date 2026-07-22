@@ -20,10 +20,6 @@ use Psr\Log\AbstractLogger;
 use RuntimeException;
 use Throwable;
 
-// The optional celema/server package is not installed; provide its
-// Console class, which the error handler integrates with.
-require_once __DIR__ . '/Fixtures/ServerConsole.php';
-
 final class ErrorHandlerTest extends TestCase
 {
 	public function testProcessCatchesThrowable(): void
