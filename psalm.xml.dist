@@ -16,7 +16,6 @@
 		<directory name="app" />
 		<directory name="src" />
 		<ignoreFiles>
-			<directory name="src/Server" />
 			<directory name="vendor" />
 		</ignoreFiles>
 	</projectFiles>

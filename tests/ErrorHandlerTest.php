@@ -7,9 +7,9 @@ namespace Celema\Core\Tests;
 use Celema\Core\Error\Handler;
 use Celema\Core\Exception\HttpNotFound;
 use Celema\Core\Response as CoreResponse;
-use Celema\Core\Server\Console;
 use Celema\Core\Tests\Fixtures\Error\TestDebugHandler;
 use Celema\Core\Tests\Fixtures\Error\TestRenderer;
+use Celema\Server\Console;
 use DivisionByZeroError;
 use ErrorException;
 use Exception;
@@ -19,6 +19,10 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
 use Throwable;
+
+// The optional celema/server package is not installed; provide its
+// Console class, which the error handler integrates with.
+require_once __DIR__ . '/Fixtures/ServerConsole.php';
 
 final class ErrorHandlerTest extends TestCase
 {

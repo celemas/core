@@ -7,9 +7,9 @@ namespace Celema\Core\Error;
 use Celema\Core\Exception\HttpError;
 use Celema\Core\Exception\HttpMethodNotAllowed;
 use Celema\Core\Exception\HttpNotFound;
-use Celema\Core\Server\Console as ServerConsole;
 use Celema\Router\Exception\MethodNotAllowedException;
 use Celema\Router\Exception\NotFoundException;
+use Celema\Server\Console as ServerConsole;
 use ErrorException;
 use Override;
 use Psr\Http\Message\ResponseFactoryInterface as ResponseFactory;
@@ -207,7 +207,10 @@ class Handler implements Middleware
 
 	protected function recordServerException(Throwable $exception): void
 	{
-		if ($this->status($exception) >= 500) {
+		// The celema/server dev server is an optional dependency; report
+		// handled server errors to its request log when it is installed.
+		/** @psalm-suppress UndefinedClass */
+		if ($this->status($exception) >= 500 && class_exists(ServerConsole::class)) {
 			ServerConsole::recordException($exception, trace: $this->debug);
 		}
 	}

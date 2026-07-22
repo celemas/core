@@ -14,9 +14,6 @@
 		<include>
 			<directory>src</directory>
 		</include>
-		<exclude>
-			<directory suffix=".php">src/Server</directory>
-		</exclude>
 	</source>
 	<coverage includeUncoveredFiles="true">
 		<report>

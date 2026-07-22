@@ -44,25 +44,26 @@ $app->group('/admin', function (Group $admin) use ($auth): void {
 });
 ```
 
-## Development servers
+## Development server
 
-Core provides two console command classes for local development:
+The development server commands live in the optional [`celema/server`](https://codeberg.org/celema/server) package, which runs applications with the PHP CLI's built-in server or FrankenPHP:
 
-- `Celema\Core\Server\Server` runs the application with the PHP CLI's built-in server.
-- `Celema\Core\Server\FrankenPhp` runs it with the `frankenphp` executable from `PATH`.
+```bash
+composer require --dev celema/server
+```
 
-Register either class with `celema/console` using a factory that supplies the application's public directory. Both commands support host, port, request-log filtering, and BrowserSync-backed `--watch` mode. The FrankenPHP command uses classic mode, not worker mode; its `--debug` option enables verbose Caddy logs. FrankenPHP embeds its own PHP runtime, extensions, and configuration rather than using the PHP CLI that starts the command.
+When the package is installed, Core's error handler automatically reports handled server errors to the development server's request log.
 
 ### Development example
 
-The repository's example app exercises routing, autowiring, request and response helpers, middleware, error handling, static assets, and request-log states. Run it on port `1973` with either development server:
+The repository's example app exercises routing, autowiring, request and response helpers, middleware, error handling, static assets, and request-log states. With `celema/server` installed, run it on port `1973` with either development server:
 
 ```bash
 ./app/run server
 ./app/run frankenphp
 ```
 
-Add `--watch` to run BrowserSync and reload when the example or Core source changes.
+Add `--watch` to run BrowserSync and reload when the example or Core source changes. Both commands support host, port, request-log filtering, and BrowserSync-backed `--watch` mode.
 
 Supported PSRs:
 
