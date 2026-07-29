@@ -26,6 +26,7 @@
 
 ### Fixed
 
+- PHP deprecations no longer abort handled requests. Core reports them through the configured logger, or delegates them to PHP's native error handler when no logger is configured; strict applications can include deprecation levels in the error handler's `exceptionLevels` constructor argument.
 - The dev server's PATH checks use `where` on Windows instead of `which`, so BrowserSync dependencies and the FrankenPHP binary are detected there.
 - The dev server request log also hides the PHP server's connection and request lines for IPv6 clients; previously only IPv4 lines were hidden, so connecting via `::1` leaked `Accepted`/`Closing` noise into the log.
 - The dev server no longer runs `stty` on Windows or without a terminal, so `stty: stdin isn't a terminal` no longer leaks into the server output when the command runs non-interactively.

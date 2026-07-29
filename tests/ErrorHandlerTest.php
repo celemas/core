@@ -39,6 +39,58 @@ final class ErrorHandlerTest extends TestCase
 		);
 	}
 
+	public function testProcessReportsDeprecationWithoutInterruptingRequest(): void
+	{
+		$logger = new class extends AbstractLogger {
+			/** @var list<array{level: mixed, message: string, context: array<string, mixed>}> */
+			public array $records = [];
+
+			/** @param array<string, mixed> $context */
+			public function log(mixed $level, string|\Stringable $message, array $context = []): void
+			{
+				$this->records[] = [
+					'level' => $level,
+					'message' => (string) $message,
+					'context' => $context,
+				];
+			}
+		};
+		$expected = $this->response();
+		$expected->getBody()->write('completed');
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger($logger);
+		$reporting = error_reporting(E_ALL);
+
+		try {
+			$response = $handler->process(
+				$this->request(),
+				new class($expected) implements RequestHandler {
+					public function __construct(
+						private readonly Response $response,
+					) {}
+
+					public function handle(Request $request): Response
+					{
+						trigger_error('deprecated call', E_USER_DEPRECATED);
+
+						return $this->response;
+					}
+				},
+			);
+		} finally {
+			error_reporting($reporting);
+		}
+
+		$this->assertSame($expected, $response);
+		$this->assertSame('completed', (string) $response->getBody());
+		$this->assertSame('notice', $logger->records[0]['level']);
+		$this->assertSame('PHP diagnostic', $logger->records[0]['message']);
+		$exception = $logger->records[0]['context']['exception'] ?? null;
+		$this->assertInstanceOf(ErrorException::class, $exception);
+		$this->assertSame('deprecated call', $exception->getMessage());
+		$this->assertSame(E_USER_DEPRECATED, $exception->getSeverity());
+	}
+
 	public function testProcessScopesPhpErrorHandler(): void
 	{
 		$called = false;
@@ -95,6 +147,32 @@ final class ErrorHandlerTest extends TestCase
 		}
 
 		$this->fail('ErrorException was not thrown.');
+	}
+
+	public function testHandleErrorDelegatesDeprecationsWithoutLogger(): void
+	{
+		$handler = new Handler($this->factory()->responseFactory());
+		$reporting = error_reporting(E_ALL);
+
+		try {
+			$this->assertFalse($handler->handleError(E_DEPRECATED, 'deprecated'));
+			$this->assertFalse($handler->handleError(E_USER_DEPRECATED, 'user deprecated'));
+		} finally {
+			error_reporting($reporting);
+		}
+	}
+
+	public function testDeprecationsCanBeConvertedToExceptions(): void
+	{
+		$handler = new Handler($this->factory()->responseFactory(), exceptionLevels: E_ALL);
+		$reporting = error_reporting(E_ALL);
+
+		try {
+			$this->throws(ErrorException::class, 'strict deprecation');
+			$handler->handleError(E_USER_DEPRECATED, 'strict deprecation');
+		} finally {
+			error_reporting($reporting);
+		}
 	}
 
 	public function testDefaultRendererHandlesUnmatchedException(): void

@@ -34,6 +34,7 @@ class Handler implements Middleware
 	public function __construct(
 		protected readonly ResponseFactory $responseFactory,
 		protected readonly bool $debug = false,
+		protected readonly int $exceptionLevels = E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED,
 	) {}
 
 	public function debugHandler(DebugHandler $debugHandler): void
@@ -85,11 +86,26 @@ class Handler implements Middleware
 		string $file = '',
 		int $line = 0,
 	): bool {
-		if (($level & error_reporting()) !== 0) {
-			throw new ErrorException($message, 0, $level, $file, $line);
+		if (($level & error_reporting()) === 0) {
+			return false;
 		}
 
-		return false;
+		$exception = new ErrorException($message, 0, $level, $file, $line);
+
+		if (($level & $this->exceptionLevels) !== 0) {
+			// Converted diagnostics continue through the normal exception flow.
+			throw $exception;
+		}
+
+		if ($this->logger === null) {
+			// Let PHP report diagnostics when Core has no logger.
+			return false;
+		}
+
+		$this->logger->notice('PHP diagnostic', ['exception' => $exception]);
+
+		// Prevent PHP from reporting the logged diagnostic again.
+		return true;
 	}
 
 	public function response(Throwable $exception, Request $request): Response
