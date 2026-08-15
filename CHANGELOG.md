@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased](https://codeberg.org/celema/core/compare/0.5.0...HEAD)
+## [Unreleased](https://codefloe.com/celema/core/compare/0.5.0...HEAD)
 
 ### Breaking
 
@@ -32,7 +32,7 @@
 - The dev server no longer runs `stty` on Windows or without a terminal, so `stty: stdin isn't a terminal` no longer leaks into the server output when the command runs non-interactively.
 - The `server` command reports startup failures — an unavailable port, invalid options, missing BrowserSync dependencies, a failed process spawn — in red on stderr and exits with `1`; previously the message went to stdout and the command exited with `0`.
 
-## [0.5.0](https://codeberg.org/celema/core/src/tag/0.5.0) (2026-07-18)
+## [0.5.0](https://codefloe.com/celema/core/src/tag/0.5.0) (2026-07-18)
 
 ### Changed
 
@@ -44,7 +44,7 @@
 
 - Removed the previous Composer package name, PHP namespaces, and development server environment variable names; consumers must update their dependencies and integrations.
 
-## [0.4.0](https://codeberg.org/celema/core/src/tag/0.4.0) (2026-06-11)
+## [0.4.0](https://codefloe.com/celema/core/src/tag/0.4.0) (2026-06-11)
 
 ### Added
 
@@ -59,7 +59,7 @@
 - Mapped router not-found and method-not-allowed failures to core HTTP exceptions before rendering.
 - Declared the PSR HTTP server, HTTP message, and log interfaces used by runtime code as direct dependencies.
 
-## [0.3.0](https://codeberg.org/celema/core/src/tag/0.3.0) (2026-06-09)
+## [0.3.0](https://codefloe.com/celema/core/src/tag/0.3.0) (2026-06-09)
 
 ### Breaking
 
@@ -80,7 +80,7 @@
 
 - Improved development server startup by validating port values and reporting unavailable ports before launching PHP or BrowserSync.
 
-## [0.2.0](https://codeberg.org/celema/core/src/tag/0.2.0) (2026-02-21)
+## [0.2.0](https://codefloe.com/celema/core/src/tag/0.2.0) (2026-02-21)
 
 Codename: Jonas
 
@@ -88,7 +88,7 @@ Codename: Jonas
 
 - BREAKING: Replaced `celemas/registry` dependency with `celemas/container`. The `Registry` class is now `Container` (`Celemas\Container\Container`), and `App::registry()` is now `App::container()`.
 
-## [0.1.0](https://codeberg.org/celema/core/src/tag/0.1.0) (2026-01-31)
+## [0.1.0](https://codefloe.com/celema/core/src/tag/0.1.0) (2026-01-31)
 
 Initial release.
 

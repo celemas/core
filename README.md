@@ -1,7 +1,7 @@
 # Celema Core Framework
 
 <!-- prettier-ignore-start -->
-[![ci](https://codeberg.org/celema/core/badges/workflows/ci.yml/badge.svg?style=flat&logo=codeberg&logoColor=white&label=ci)](https://codeberg.org/celema/core/actions)
+[![ci](https://codefloe.com/celema/core/badges/workflows/ci.yml/badge.svg?style=flat&logo=forgejo&logoColor=white&label=ci)](https://codefloe.com/celema/core/actions)
 [![code coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fcore%2Fcode%2Fbadge.json)](https://cov.celema.dev/celema/core/code)
 [![type coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fcore%2Ftypes%2Fbadge-cover.json)](https://cov.celema.dev/celema/core/types)
 [![psalm level](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fcore%2Ftypes%2Fbadge-level.json)](https://cov.celema.dev/celema/core/types)
@@ -46,7 +46,7 @@ $app->group('/admin', function (Group $admin) use ($auth): void {
 
 ## Development server
 
-The development server commands live in the optional [`celema/server`](https://codeberg.org/celema/server) package, which runs applications with the PHP CLI's built-in server or FrankenPHP:
+The development server commands live in the optional [`celema/server`](https://codefloe.com/celema/server) package, which runs applications with the PHP CLI's built-in server or FrankenPHP:
 
 ```bash
 composer require --dev celema/server
