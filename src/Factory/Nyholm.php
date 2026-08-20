@@ -20,7 +20,7 @@ class Nyholm extends AbstractFactory
 		if (!class_exists(Psr17Factory::class) || !class_exists(ServerRequestCreator::class)) {
 			throw new RuntimeException(
 				'Install nyholm/psr7 and nyholm/psr7-server to use the default '
-				. 'PSR-7 factory, or pass a custom Factory implementation to the App constructor',
+					. 'PSR-7 factory, or pass a custom Factory implementation to the App constructor',
 			);
 		}
 

@@ -70,8 +70,8 @@ abstract class HttpError extends Exception implements CoreException
 
 			$result .= sprintf(
 				'<p class="trace"><span class="trace-number">#%s</span>'
-				. '<span class="trace-file">%s <span class="trace-line-number">(%s)</span></span>'
-				. "<code class=\"trace-code\">%s%s%s(%s)</code></p>\n",
+					. '<span class="trace-file">%s <span class="trace-line-number">(%s)</span></span>'
+					. "<code class=\"trace-code\">%s%s%s(%s)</code></p>\n",
 				$traceNumber,
 				$frame['file'] ?? '',
 				$frame['line'] ?? '',
