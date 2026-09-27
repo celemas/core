@@ -1,36 +1,24 @@
 # Changelog
 
-## [Unreleased](https://codefloe.com/celema/core/compare/0.5.0...HEAD)
+## [Unreleased](https://codefloe.com/celema/core/compare/0.6.0...HEAD)
 
-### Breaking
+No notable changes since the last release.
 
-- Replaced the Laminas-backed `Celema\Core\Emitter` class with the `Celema\Core\Emitter\Emitter` interface and its built-in `Celema\Core\Emitter\Sapi` implementation, dropping the `laminas/laminas-httphandlerrunner` dependency. Core now runs without third-party runtime dependencies beyond the PSR interfaces. A custom emitter can be plugged in through the new `App::emitter()` method.
+## [0.6.0](https://codefloe.com/celema/core/src/tag/0.6.0) (2026-09-27)
+
+- Replaced the Laminas-backed `Celema\Core\Emitter` class with the `Celema\Core\Emitter\Emitter` interface and its built-in `Celema\Core\Emitter\Sapi` implementation, dropping the `laminas/laminas-httphandlerrunner` dependency. A custom emitter can be plugged in through the new `App::emitter()` method.
 - Responses to `HEAD` requests and responses with a `1xx`, `204`, or `304` status now emit their headers without a body, as required by RFC 9110. Previously the body was emitted verbatim.
 - Removed the `Guzzle` and `Laminas` PSR-17 factories and the `Discovery` class. `Nyholm` is the only built-in factory; `App::create()` uses it directly and reports a clear error when `nyholm/psr7` and `nyholm/psr7-server` are missing. Other PSR-7 implementations remain usable through a custom `Celema\Core\Factory\Factory` implementation passed to the `App` constructor.
 - Extracted the development server into the standalone `celema/server` package. The `Celema\Core\Server` namespace is gone; the commands now live in `Celema\Server`. Core no longer depends on `celema/console`, and the error handler reports handled server errors to the development server only when `celema/server` is installed.
-- Adopted the attribute-based command API of `celema/console` 0.5. `Server` is now a plain `#[Command]` class invoked via `__invoke(Args $args, Io $io)`; its options are documented via `#[Opt]` attributes instead of a `help()` method.
+- Required the PHP `mbstring` extension.
 
 ### Added
 
 - Added a development-only example app with routes for checking Core's routing, autowiring, HTTP helpers, middleware, error handling, static assets, and PHP or FrankenPHP development-server output.
-- Added the `FrankenPhp` development-server command for running applications with a `frankenphp` executable from `PATH`. It uses FrankenPHP classic mode, renders Caddy's JSON access log through the existing console request display, reports handled Core exceptions, supports BrowserSync watch mode, and generates a temporary Caddyfile only when a configured route prefix needs custom routing.
-- The `Server` command accepts a custom PHP executable via its `executable` constructor parameter, mirroring the `FrankenPhp` command.
-
-### Changed
-
-- FrankenPHP now prints handled exception details after the corresponding request log line instead of before it.
-- The PHP and FrankenPHP request logs now dim their timestamps and request durations.
-- The BrowserSync backend port is now ten times the public port (`1983` → `19830`), falling back to the public port plus `10000` when that would exceed `65535`, and moves upward from there until a free port is found. Previously the backend ran on the public port plus one, which commonly collides with a neighboring Vite dev server.
-- The dev server prints its own messages — the listening banners and the Xdebug session notice — through the console `Io` with inline markup, honoring `NO_COLOR`, `FORCE_COLOR`, and terminal detection, instead of raw `echo` with hardcoded escape codes.
-- The dev-server request log is rendered by the `server` command itself: the CLI router reports each request as a plain structured line, and the parent formats and colors it through the console `Io`, so the request log honors `NO_COLOR`, `FORCE_COLOR`, and terminal detection too. Request paths and all other relayed PHP server output are escaped, so request URLs and error messages can no longer inject terminal escape sequences; BrowserSync output still passes through verbatim. The `CELEMA_TERMINAL_COLUMNS` environment variable is gone — the terminal width is measured in the server command — and `--filter` now matches against the decoded request path instead of the colored log line.
 
 ### Fixed
 
 - PHP deprecations no longer abort handled requests. Core reports them through the configured logger, or delegates them to PHP's native error handler when no logger is configured; strict applications can include deprecation levels in the error handler's `exceptionLevels` constructor argument.
-- The dev server's PATH checks use `where` on Windows instead of `which`, so BrowserSync dependencies and the FrankenPHP binary are detected there.
-- The dev server request log also hides the PHP server's connection and request lines for IPv6 clients; previously only IPv4 lines were hidden, so connecting via `::1` leaked `Accepted`/`Closing` noise into the log.
-- The dev server no longer runs `stty` on Windows or without a terminal, so `stty: stdin isn't a terminal` no longer leaks into the server output when the command runs non-interactively.
-- The `server` command reports startup failures — an unavailable port, invalid options, missing BrowserSync dependencies, a failed process spawn — in red on stderr and exits with `1`; previously the message went to stdout and the command exited with `0`.
 
 ## [0.5.0](https://codefloe.com/celema/core/src/tag/0.5.0) (2026-07-18)
 
