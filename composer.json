@@ -27,7 +27,6 @@
 	},
 	"require-dev": {
 		"carthage-software/mago": "1.50.0",
-		"celema/dev": "^6.0",
 		"celema/server": "^0.1",
 		"ernst/coverlyzer": "^0.3",
 		"nyholm/psr7": "^1.5",
@@ -54,7 +53,7 @@
 		"test": "./vendor/bin/phpunit --testdox --no-coverage --colors=always",
 		"types": "./vendor/bin/psalm --no-cache",
 		"docs:format": "npx prettier@3.6.2 --write --config ./docs/.prettierrc README.md CHANGELOG.md LICENSE.md docs/",
-		"docs:lint": "npx markdownlint-cli2@0.22.1 --config ./vendor/celema/dev/config/markdownlint.jsonc README.md CHANGELOG.md LICENSE.md docs/",
+		"docs:lint": "npx markdownlint-cli2@0.22.1 README.md CHANGELOG.md LICENSE.md docs/",
 		"lint": [
 			"./vendor/bin/mago fmt --check",
 			"./vendor/bin/mago lint"
