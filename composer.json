@@ -26,14 +26,14 @@
 		"psr/log": "^3.0"
 	},
 	"require-dev": {
-		"carthage-software/mago": "~1.47.0",
+		"carthage-software/mago": "1.50.0",
 		"celema/dev": "^6.0",
 		"celema/server": "^0.1",
 		"ernst/coverlyzer": "^0.3",
 		"nyholm/psr7": "^1.5",
 		"nyholm/psr7-server": "^1",
 		"phpunit/phpunit": "^13.0",
-		"vimeo/psalm": "~6.16.0"
+		"vimeo/psalm": "6.19.0"
 	},
 	"suggest": {
 		"nyholm/psr7": "Default PSR-7/PSR-17 implementation used by App::create()",
