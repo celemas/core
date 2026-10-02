@@ -13,6 +13,7 @@ use Celema\Core\Exception\HttpNotFound;
 use Celema\Core\Factory\Factory;
 use Celema\Core\Response;
 use Celema\Core\Tests\Fixtures\Counter;
+use Celema\Core\Tests\Fixtures\FailingLogger;
 use Celema\Core\Tests\Fixtures\RecordingEmitter;
 use Celema\Core\Tests\Fixtures\RecordingLogger;
 use Closure;
@@ -265,6 +266,45 @@ final class AppLifecycleTest extends TestCase
 		$log = $this->captureErrorLog(static fn() => $app->run($request));
 
 		$this->assertStringContainsString('scoped logger', $log);
+	}
+
+	public function testFailingLoggerDoesNotPreventThe500Response(): void
+	{
+		$app = App::create();
+		$app->logger(new FailingLogger());
+		$app->emitter($emitter = new RecordingEmitter());
+		$app->get('/', static fn() => throw new RuntimeException('view failed'));
+		$tornDown = false;
+		$app->teardown(static function () use (&$tornDown): void {
+			$tornDown = true;
+		});
+
+		$request = $this->request();
+		$log = $this->captureErrorLog(static fn() => $app->run($request));
+
+		$this->assertSame(500, $emitter->responses[0]->getStatusCode());
+		$this->assertSame(true, $tornDown);
+		$this->assertStringContainsString('Logging failed: RuntimeException: log not writable', $log);
+		$this->assertStringContainsString('Unhandled exception: RuntimeException: view failed', $log);
+	}
+
+	public function testFailingLoggerDoesNotReplaceTheResponseDuringTeardown(): void
+	{
+		$app = $this->countingApp();
+		$app->logger(new FailingLogger());
+		$app->emitter($emitter = new RecordingEmitter());
+		$app->teardown(static fn() => throw new RuntimeException('hook failed'));
+
+		$request = $this->request();
+		$result = null;
+		$log = $this->captureErrorLog(static function () use ($app, $request, &$result): void {
+			$result = $app->run($request);
+		});
+
+		$this->assertInstanceOf(ResponseInterface::class, $result);
+		$this->assertSame(['1'], $emitter->bodies());
+		$this->assertStringContainsString('Request teardown failed: RuntimeException: hook failed', $log);
+		$this->assertSame(false, $app->reusable());
 	}
 
 	public function testHandleDoesNotEmitAndTearsDown(): void

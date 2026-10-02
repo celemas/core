@@ -319,14 +319,17 @@ class App implements RouteAdder, RequestHandler
 		try {
 			/** @var mixed $logger */
 			$logger = $this->container->has(Logger::class) ? $this->container->get(Logger::class) : null;
-		} catch (Throwable) {
-			$logger = null;
-		}
 
-		if ($logger instanceof Logger) {
-			$logger->critical($message, ['exception' => $exception]);
+			if ($logger instanceof Logger) {
+				$logger->critical($message, ['exception' => $exception]);
 
-			return;
+				return;
+			}
+		} catch (Throwable $e) {
+			// A logger that cannot be resolved or cannot write, for example
+			// to an unwritable file, must not keep the failure from being
+			// answered or the request from being torn down.
+			error_log('Logging failed: ' . (string) $e);
 		}
 
 		error_log($message . ': ' . (string) $exception);
