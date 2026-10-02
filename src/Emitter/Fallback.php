@@ -21,12 +21,16 @@ final class Fallback
 	 * that cannot be cleaned, the status is set to 500 when possible and
 	 * that output becomes the body.
 	 */
-	public static function emit(Emitter $emitter, Response $response, int $bufferLevel): void
-	{
+	public static function emit(
+		Emitter $emitter,
+		Response $response,
+		int $bufferLevel,
+		bool $withoutBody = false,
+	): void {
 		self::discardBuffers($bufferLevel);
 
 		try {
-			$emitter->emit($response);
+			$emitter->emit($response, $withoutBody);
 		} catch (Throwable) {
 			if (!headers_sent()) {
 				http_response_code($response->getStatusCode());

@@ -226,7 +226,8 @@ class App implements RouteAdder, RequestHandler
 			$this->reusable = false;
 			$this->report('Unhandled exception', $e);
 			$this->recordServerException($e);
-			$this->emitFailure($bufferLevel, $e);
+			// The method is unknown if creating the request failed.
+			$this->emitFailure($bufferLevel, $e, $request?->getMethod() === 'HEAD');
 
 			return false;
 		} finally {
@@ -349,7 +350,7 @@ class App implements RouteAdder, RequestHandler
 	 * yet. Like PHP for an uncaught exception, it shows the exception only
 	 * while `display_errors` sends errors to the output, as in development.
 	 */
-	protected function emitFailure(int $bufferLevel, Throwable $exception): void
+	protected function emitFailure(int $bufferLevel, Throwable $exception, bool $withoutBody = false): void
 	{
 		$body = '500 Internal Server Error';
 		$display = strtolower((string) ini_get('display_errors'));
@@ -361,6 +362,6 @@ class App implements RouteAdder, RequestHandler
 		$response = $this->factory->response(500)->withHeader('Content-Type', 'text/plain; charset=utf-8');
 		$response->getBody()->write($body);
 
-		Fallback::emit($this->emitter, $response, $bufferLevel);
+		Fallback::emit($this->emitter, $response, $bufferLevel, $withoutBody);
 	}
 }

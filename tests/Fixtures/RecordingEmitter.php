@@ -14,6 +14,9 @@ final class RecordingEmitter implements Emitter
 	/** @var list<Response> */
 	public array $responses = [];
 
+	/** @var list<bool> The withoutBody argument of each emitted response. */
+	public array $withoutBody = [];
+
 	/** @param int $failures Number of emit() calls that throw before emitting works. */
 	public function __construct(
 		private int $failures = 0,
@@ -29,6 +32,7 @@ final class RecordingEmitter implements Emitter
 		}
 
 		$this->responses[] = $response;
+		$this->withoutBody[] = $withoutBody;
 
 		if ($this->onEmit !== null) {
 			($this->onEmit)($response);

@@ -307,6 +307,24 @@ final class AppLifecycleTest extends TestCase
 		$this->assertSame(false, $app->reusable());
 	}
 
+	public function testFailedHeadRequestIsAnsweredWithoutBody(): void
+	{
+		$app = App::create();
+		$app->logger(new RecordingLogger());
+		$app->emitter($emitter = new RecordingEmitter());
+		$app->head('/', static fn() => throw new RuntimeException('view failed'));
+		$app->get('/', static fn() => throw new RuntimeException('view failed'));
+
+		$app->run($this->request(['REQUEST_METHOD' => 'HEAD']));
+		$app->run($this->request());
+
+		$this->assertSame([500, 500], array_map(
+			static fn(ResponseInterface $response): int => $response->getStatusCode(),
+			$emitter->responses,
+		));
+		$this->assertSame([true, false], $emitter->withoutBody);
+	}
+
 	public function testHandleDoesNotEmitAndTearsDown(): void
 	{
 		$app = $this->countingApp();
