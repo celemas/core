@@ -88,7 +88,9 @@ final class FrankenPhpWorkerTest extends TestCase
 
 		$app->serve();
 
-		$this->assertSame(['/a', '500 Internal Server Error'], $emitter->bodies());
+		$this->assertCount(2, $emitter->bodies());
+		$this->assertSame('/a', $emitter->bodies()[0]);
+		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[1]);
 		$this->assertCount(1, WorkerState::$queue);
 	}
 

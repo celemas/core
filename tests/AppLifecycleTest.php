@@ -107,11 +107,53 @@ final class AppLifecycleTest extends TestCase
 
 		$this->assertSame(false, $result);
 		$this->assertSame(500, $emitter->responses[0]->getStatusCode());
-		$this->assertSame('500 Internal Server Error', $emitter->bodies()[0]);
+		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[0]);
 		$this->assertSame(['Unhandled exception'], $logger->messages());
 		$this->assertSame('view failed', $logger->records[0]['context']['exception']->getMessage());
 		$this->assertSame(true, $tornDown);
 		$this->assertSame(false, $app->reusable());
+	}
+
+	public function testFailureShowsTheExceptionWhilePhpDisplaysErrors(): void
+	{
+		$app = App::create();
+		$app->logger(new RecordingLogger());
+		$app->emitter($emitter = new RecordingEmitter());
+		$app->get('/', static fn() => throw new RuntimeException('shown in development'));
+		// @mago-expect lint:no-ini-set
+		$previous = ini_set('display_errors', '1');
+
+		try {
+			$app->run($this->request());
+		} finally {
+			// @mago-expect lint:no-ini-set
+			ini_set('display_errors', (string) $previous);
+		}
+
+		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[0]);
+		$this->assertStringContainsString('RuntimeException: shown in development', $emitter->bodies()[0]);
+	}
+
+	public function testFailureHidesTheExceptionWhenPhpDoesNotDisplayErrors(): void
+	{
+		$app = App::create();
+		$app->logger(new RecordingLogger());
+		$app->emitter($emitter = new RecordingEmitter());
+		$app->get('/', static fn() => throw new RuntimeException('hidden in production'));
+
+		foreach (['0', 'stderr'] as $setting) {
+			// @mago-expect lint:no-ini-set
+			$previous = ini_set('display_errors', $setting);
+
+			try {
+				$app->run($this->request());
+			} finally {
+				// @mago-expect lint:no-ini-set
+				ini_set('display_errors', (string) $previous);
+			}
+		}
+
+		$this->assertSame(['500 Internal Server Error', '500 Internal Server Error'], $emitter->bodies());
 	}
 
 	public function testDebugRethrowFromTheErrorHandlerIsAnswered(): void
@@ -138,7 +180,8 @@ final class AppLifecycleTest extends TestCase
 		$result = $app->run($this->request());
 
 		$this->assertSame(false, $result);
-		$this->assertSame(['500 Internal Server Error'], $emitter->bodies());
+		$this->assertCount(1, $emitter->bodies());
+		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[0]);
 		$this->assertSame(
 			'Output already present in the output buffer',
 			$logger->records[0]['context']['exception']->getMessage(),
@@ -162,7 +205,8 @@ final class AppLifecycleTest extends TestCase
 		$app->run($this->request());
 
 		$this->assertSame($level, ob_get_level());
-		$this->assertSame(['500 Internal Server Error'], $emitter->bodies());
+		$this->assertCount(1, $emitter->bodies());
+		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[0]);
 	}
 
 	public function testTeardownFailuresAreLoggedWithoutReplacingTheResponse(): void

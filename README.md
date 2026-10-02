@@ -84,7 +84,7 @@ Hooks run in registration order. Each one runs even if an earlier one failed.
 
 ### Failures
 
-Exceptions thrown while handling a request are the error handler's job. A throwable that escapes it, or the emitter, is logged through the PSR-3 logger registered with `$app->logger()` (otherwise with `error_log()`), and `run()` answers with a minimal `500` response if nothing was sent yet. A failing teardown step is logged the same way; it never replaces the response that was already emitted.
+Exceptions thrown while handling a request are the error handler's job. A throwable that escapes it, or the emitter, is logged through the PSR-3 logger registered with `$app->logger()` (otherwise with `error_log()`), and `run()` answers with a minimal `500` response if nothing was sent yet. Like PHP for an uncaught exception, that response shows the exception only while `display_errors` is on. In debug mode without a debug handler, the error handler lets exceptions escape on purpose, so they end up here. A failing teardown step is logged the same way; it never replaces the response that was already emitted.
 
 ## Worker mode
 

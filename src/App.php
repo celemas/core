@@ -226,7 +226,7 @@ class App implements RouteAdder, RequestHandler
 			$this->reusable = false;
 			$this->report('Unhandled exception', $e);
 			$this->recordServerException($e);
-			$this->emitFailure($bufferLevel);
+			$this->emitFailure($bufferLevel, $e);
 
 			return false;
 		} finally {
@@ -341,11 +341,22 @@ class App implements RouteAdder, RequestHandler
 		}
 	}
 
-	/** Answers with a bare 500 response if the failed request sent nothing yet. */
-	protected function emitFailure(int $bufferLevel): void
+	/**
+	 * Answers with a minimal 500 response if the failed request sent nothing
+	 * yet. Like PHP for an uncaught exception, it shows the exception only
+	 * while `display_errors` sends errors to the output, as in development.
+	 */
+	protected function emitFailure(int $bufferLevel, Throwable $exception): void
 	{
+		$body = '500 Internal Server Error';
+		$display = strtolower((string) ini_get('display_errors'));
+
+		if ($display !== 'stderr' && filter_var($display, FILTER_VALIDATE_BOOL) || $display === 'stdout') {
+			$body .= "\n\n" . (string) $exception;
+		}
+
 		$response = $this->factory->response(500)->withHeader('Content-Type', 'text/plain; charset=utf-8');
-		$response->getBody()->write('500 Internal Server Error');
+		$response->getBody()->write($body);
 
 		Fallback::emit($this->emitter, $response, $bufferLevel);
 	}
