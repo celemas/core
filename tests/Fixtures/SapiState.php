@@ -15,10 +15,14 @@ final class SapiState
 	/** @var list<array{0: string, 1: bool, 2: int}> */
 	public static array $headers = [];
 
+	/** @var list<int> */
+	public static array $statusCodes = [];
+
 	public static function reset(): void
 	{
 		self::$headersSent = false;
 		self::$headers = [];
+		self::$statusCodes = [];
 	}
 
 	/** @return list<string> */

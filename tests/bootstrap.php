@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 /*
  * Overrides for the global functions called unqualified in
- * Celema\Core\Emitter\Sapi. They are defined before the first emitter
- * call so every call site binds to them for the whole test run.
+ * Celema\Core\Emitter. They are defined before the first emitter call so
+ * every call site binds to them for the whole test run.
  */
 
 namespace Celema\Core\Emitter {
@@ -27,6 +27,14 @@ namespace Celema\Core\Emitter {
 		}
 
 		return false;
+	}
+
+	// @mago-expect lint:function-name
+	function http_response_code(int $response_code = 0): int|bool
+	{
+		SapiState::$statusCodes[] = $response_code;
+
+		return true;
 	}
 }
 
