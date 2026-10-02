@@ -54,18 +54,18 @@ final class RequestHeaderTest extends TestCase
 	public function testWritingHeaders(): void
 	{
 		$request = new Request($this->request());
-		$request->setHeader('test-header', 'test-value');
-		$request->setHeader('test-header', 'test-value-replaced');
-		$request->addHeader('test-header', 'test-value-added');
+		$changed = $request
+			->withHeader('test-header', 'test-value')
+			->withHeader('test-header', 'test-value-replaced')
+			->withAddedHeader('test-header', 'test-value-added');
 
-		$this->assertSame('test-value-replaced, test-value-added', $request->header('test-header'));
+		$this->assertSame('test-value-replaced, test-value-added', $changed->header('test-header'));
 		$this->assertSame(
 			['test-value-replaced', 'test-value-added'],
-			$request->headerArray('test-header'),
+			$changed->headerArray('test-header'),
 		);
-
-		$request->removeHeader('test-header');
-
+		$this->assertSame('', $changed->withoutHeader('test-header')->header('test-header'));
+		$this->assertSame('test-value-replaced, test-value-added', $changed->header('test-header'));
 		$this->assertSame('', $request->header('test-header'));
 	}
 }

@@ -61,12 +61,22 @@ final class RequestHelpersTest extends TestCase
 		$this->assertSame(null, $request->json());
 	}
 
-	public function testGettingAndSettingPsr7Instance(): void
+	public function testUnwrapReturnsTheWrappedRequest(): void
 	{
 		$psr = $this->request();
-		$request = new Request($this->request());
-		$request->wrap($psr);
 
-		$this->assertSame($psr, $request->unwrap());
+		$this->assertSame($psr, new Request($psr)->unwrap());
+	}
+
+	public function testChangesKeepTheWrapperClass(): void
+	{
+		$request = new class($this->request()) extends Request {
+			public string $label = 'kept';
+		};
+		$changed = $request->with('one', 1);
+
+		$this->assertInstanceOf($request::class, $changed);
+		$this->assertSame('kept', $changed->label);
+		$this->assertNotSame($request, $changed);
 	}
 }

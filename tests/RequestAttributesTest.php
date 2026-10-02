@@ -28,10 +28,11 @@ final class RequestAttributesTest extends TestCase
 	public function testAttributes(): void
 	{
 		$request = new Request($this->request()->withAttribute('one', 1));
-		$request->set('two', '2');
+		$changed = $request->with('two', '2');
 
-		$this->assertSame(2, count($request->attributes()));
-		$this->assertSame(1, $request->get('one'));
-		$this->assertSame('2', $request->get('two'));
+		$this->assertSame(2, count($changed->attributes()));
+		$this->assertSame(1, $changed->get('one'));
+		$this->assertSame('2', $changed->get('two'));
+		$this->assertSame(1, count($request->attributes()));
 	}
 }

@@ -40,9 +40,7 @@ final class MiddlewareTest extends TestCase
 		$middleware = new class extends Middleware {
 			public function handle(Request $request, callable $next): Response
 			{
-				$request->set('test', 'value');
-
-				$response = $next($request);
+				$response = $next($request->with('test', 'value'));
 				$body = $response->getBody();
 				$content = $body->getContents();
 				$body->rewind();

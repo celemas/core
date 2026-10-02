@@ -13,24 +13,23 @@ use Psr\Http\Message\StreamInterface as PsrStream;
 use Psr\Http\Message\UploadedFileInterface as PsrUploadedFile;
 use Psr\Http\Message\UriInterface as PsrUri;
 
-/** @api */
+/**
+ * A reading API over a PSR-7 server request. Like the request it wraps, it
+ * is immutable: the `with*()` methods return a new wrapper, so a change is
+ * never visible to other holders of the same wrapper.
+ *
+ * @api
+ */
 class Request implements RequestWrapper
 {
 	public function __construct(
-		protected PsrServerRequest $psrRequest,
+		protected readonly PsrServerRequest $psrRequest,
 	) {}
 
 	#[Override]
 	public function unwrap(): PsrServerRequest
 	{
 		return $this->psrRequest;
-	}
-
-	public function wrap(PsrServerRequest $request): static
-	{
-		$this->psrRequest = $request;
-
-		return $this;
 	}
 
 	public function params(): array
@@ -113,25 +112,19 @@ class Request implements RequestWrapper
 		return $headers;
 	}
 
-	public function setHeader(string $header, string $value): static
+	public function withHeader(string $header, string $value): static
 	{
-		$this->psrRequest = $this->psrRequest->withHeader($header, $value);
-
-		return $this;
+		return $this->wrapping($this->psrRequest->withHeader($header, $value));
 	}
 
-	public function addHeader(string $header, string $value): static
+	public function withAddedHeader(string $header, string $value): static
 	{
-		$this->psrRequest = $this->psrRequest->withAddedHeader($header, $value);
-
-		return $this;
+		return $this->wrapping($this->psrRequest->withAddedHeader($header, $value));
 	}
 
-	public function removeHeader(string $header): static
+	public function withoutHeader(string $header): static
 	{
-		$this->psrRequest = $this->psrRequest->withoutHeader($header);
-
-		return $this;
+		return $this->wrapping($this->psrRequest->withoutHeader($header));
 	}
 
 	public function hasHeader(string $header): bool
@@ -144,11 +137,10 @@ class Request implements RequestWrapper
 		return $this->psrRequest->getAttributes();
 	}
 
-	public function set(string $attribute, mixed $value): static
+	/** A new wrapper whose request carries the attribute. */
+	public function with(string $attribute, mixed $value): static
 	{
-		$this->psrRequest = $this->psrRequest->withAttribute($attribute, $value);
-
-		return $this;
+		return $this->wrapping($this->psrRequest->withAttribute($attribute, $value));
 	}
 
 	public function get(string $key, mixed $default = null): mixed
@@ -345,5 +337,11 @@ class Request implements RequestWrapper
 
 		/** @var list<string> $keys */
 		return $keys;
+	}
+
+	/** A copy for the changed request; subclasses keep their own state. */
+	private function wrapping(PsrServerRequest $request): static
+	{
+		return clone($this, ['psrRequest' => $request]);
 	}
 }

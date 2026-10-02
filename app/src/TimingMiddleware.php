@@ -15,7 +15,7 @@ final class TimingMiddleware extends Middleware
 	public function handle(Request $request, callable $next): Response
 	{
 		$started = hrtime(true);
-		$response = $next($request->set('example.started', $started));
+		$response = $next($request->with('example.started', $started));
 		$duration = (hrtime(true) - $started) / 1_000_000;
 
 		return $response

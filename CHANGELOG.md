@@ -7,6 +7,7 @@
 - Require `celema/container` 0.6 and `celema/router` 0.5.
 - `App::run()` handles each request in its own container scope, created from the app's container. Scoped entries get one instance per request, and the container is sealed after the first request, so registering entries afterwards throws.
 - `App::run()` no longer lets throwables escape that the error handler did not handle (for example in debug mode without a debug handler) or that the emitter threw. They are logged through the registered PSR-3 logger, otherwise with `error_log()`, and answered with a minimal `500` response if nothing was sent yet.
+- `Request` is immutable, like the PSR-7 request it wraps: `with()`, `withHeader()`, `withAddedHeader()` and `withoutHeader()` return a new wrapper and replace `set()`, `setHeader()`, `addHeader()` and `removeHeader()`, which changed the wrapper in place. `wrap()` is removed. In middleware based on `Middleware`, pass the changed wrapper on: `$next($request->with('key', $value))`.
 
 ### Added
 
