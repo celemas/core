@@ -40,4 +40,14 @@ namespace Celema\Core\Emitter {
 
 namespace {
 	require __DIR__ . '/../vendor/autoload.php';
+
+	/**
+	 * Stands in for FrankenPHP's worker function, which only exists in a
+	 * FrankenPHP worker. Tests queue the requests it serves.
+	 */
+	// @mago-expect lint:function-name
+	function frankenphp_handle_request(callable $callback): bool
+	{
+		return Celema\Core\Tests\Fixtures\WorkerState::next($callback);
+	}
 }

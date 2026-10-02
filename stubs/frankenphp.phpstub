@@ -1,0 +1,7 @@
+<?php
+
+/**
+ * Provided by FrankenPHP in worker mode: waits for a request, runs the
+ * callback for it, and returns false when the worker should stop.
+ */
+function frankenphp_handle_request(callable $callback): bool {}

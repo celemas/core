@@ -10,6 +10,8 @@
 
 ### Added
 
+- `App::serve()` runs the app in the runtime that started the script: a FrankenPHP worker handles requests until it retires, any other runtime handles the current request.
+- FrankenPHP worker runtime: clears the stat cache before each request, collects garbage after it, and retires after a request that failed outside the error handler or a failed teardown, after `CELEMA_WORKER_MAX_REQUESTS` requests, or above `CELEMA_WORKER_MAX_MEMORY` (default 80 % of `memory_limit`).
 - `App::handle()`: `App` implements PSR-15's `RequestHandlerInterface` and handles a request without emitting the response.
 - `App::teardown()` registers callbacks that run after every request, once its container scope was reset. Failing callbacks are logged and do not stop the others.
 

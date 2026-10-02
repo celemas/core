@@ -13,6 +13,7 @@ use Celema\Core\Emitter\Sapi;
 use Celema\Core\Error\Handler as ErrorHandler;
 use Celema\Core\Factory\Factory;
 use Celema\Core\Factory\Nyholm;
+use Celema\Core\Runtime\FrankenPhpWorker;
 use Celema\Router\AddsBeforeAfter;
 use Celema\Router\AddsRoutes;
 use Celema\Router\Dispatcher;
@@ -231,6 +232,32 @@ class App implements RouteAdder, RequestHandler
 		} finally {
 			$this->finish($scope);
 		}
+	}
+
+	/**
+	 * Runs the app in the runtime that started the script: as a FrankenPHP
+	 * worker, which handles requests until it retires, or for exactly one
+	 * request (PHP-FPM, FrankenPHP's classic mode, the CLI server).
+	 *
+	 * Register everything before calling it. The first request seals the
+	 * container, so later registrations fail.
+	 *
+	 * @param ?int $maxRequests Worker only: retire after this many requests; 0 never.
+	 *     Defaults to the CELEMA_WORKER_MAX_REQUESTS environment variable, else 0.
+	 * @param ?int $maxMemory Worker only: retire above this many bytes of memory; 0 never.
+	 *     Defaults to the CELEMA_WORKER_MAX_MEMORY environment variable, else 80 % of memory_limit.
+	 */
+	public function serve(?int $maxRequests = null, ?int $maxMemory = null): Response|false
+	{
+		if (isset($_SERVER['FRANKENPHP_WORKER']) && function_exists('frankenphp_handle_request')) {
+			return FrankenPhpWorker::configure(
+				frankenphp_handle_request(...),
+				$maxRequests,
+				$maxMemory,
+			)->serve($this);
+		}
+
+		return $this->run();
 	}
 
 	/**
