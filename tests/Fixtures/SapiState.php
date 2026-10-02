@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Celema\Core\Tests\Fixtures;
 
 /**
- * Records the header() calls made by the SAPI emitter through the
- * function overrides in tests/bootstrap.php.
+ * Records the header() calls made by the SAPI emitter and controls the
+ * other function overrides in tests/bootstrap.php.
  */
 final class SapiState
 {
@@ -18,11 +18,15 @@ final class SapiState
 	/** @var list<int> */
 	public static array $statusCodes = [];
 
+	/** Flags ob_get_status() reports for the innermost buffer instead of its own. */
+	public static ?int $bufferFlags = null;
+
 	public static function reset(): void
 	{
 		self::$headersSent = false;
 		self::$headers = [];
 		self::$statusCodes = [];
+		self::$bufferFlags = null;
 	}
 
 	/** @return list<string> */

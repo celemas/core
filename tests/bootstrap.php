@@ -36,6 +36,22 @@ namespace Celema\Core\Emitter {
 
 		return true;
 	}
+
+	/**
+	 * Reports the flags tests set for the innermost buffer, as PHP offers
+	 * no way to close a buffer opened without the removable flag.
+	 */
+	// @mago-expect lint:function-name
+	function ob_get_status(bool $full_status = false): array
+	{
+		$status = \ob_get_status($full_status);
+
+		if (SapiState::$bufferFlags !== null) {
+			$status['flags'] = SapiState::$bufferFlags;
+		}
+
+		return $status;
+	}
 }
 
 namespace {
