@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://codefloe.com/celema/core/compare/0.7.0...HEAD)
 
-No notable changes since the last release.
+### Fixed
+
+- A logger that throws while the error handler logs an exception no longer replaces the rendered response with a minimal `500` and hides the original exception: the logging failure and the record go to `error_log()`. A logger failing on a PHP diagnostic lets PHP report the diagnostic instead of throwing at the line that raised it.
+- Without a logger, the error handler writes the exceptions it logs to `error_log()`. Server errors it answered were reported nowhere before.
+- Unmatched server errors are logged as `critical` instead of `alert`. Unmatched client errors, such as `404` for an unknown route, are no longer logged; a renderer entry's log level still records them.
+
+### Changed
+
+- Error handler log records carry the request's `method` and `path` in the context.
 
 ## [0.7.0](https://codefloe.com/celema/core/src/tag/0.7.0) (2026-10-02)
 

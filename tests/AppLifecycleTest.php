@@ -399,24 +399,4 @@ final class AppLifecycleTest extends TestCase
 
 		return $app;
 	}
-
-	/** @param Closure(): mixed $callback */
-	private function captureErrorLog(Closure $callback): string
-	{
-		$file = (string) tempnam(sys_get_temp_dir(), 'celema-log');
-		// @mago-expect lint:no-ini-set
-		$previous = ini_set('error_log', $file);
-
-		try {
-			$callback();
-		} finally {
-			// @mago-expect lint:no-ini-set
-			ini_set('error_log', (string) $previous);
-		}
-
-		$log = (string) file_get_contents($file);
-		unlink($file);
-
-		return $log;
-	}
 }

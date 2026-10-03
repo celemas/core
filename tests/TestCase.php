@@ -8,6 +8,7 @@ use Celema\Container\Container;
 use Celema\Core\App;
 use Celema\Core\Factory\Factory;
 use Celema\Core\Factory\Nyholm;
+use Closure;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 use Psr\Http\Message\ResponseInterface as PsrResponse;
@@ -158,5 +159,25 @@ class TestCase extends BaseTestCase
 				],
 			],
 		];
+	}
+
+	/** @param Closure(): mixed $callback */
+	protected function captureErrorLog(Closure $callback): string
+	{
+		$file = (string) tempnam(sys_get_temp_dir(), 'celema-log');
+		// @mago-expect lint:no-ini-set
+		$previous = ini_set('error_log', $file);
+
+		try {
+			$callback();
+		} finally {
+			// @mago-expect lint:no-ini-set
+			ini_set('error_log', (string) $previous);
+		}
+
+		$log = (string) file_get_contents($file);
+		unlink($file);
+
+		return $log;
 	}
 }

@@ -9,6 +9,8 @@ use Celema\Core\Exception\HttpNotFound;
 use Celema\Core\Response as CoreResponse;
 use Celema\Core\Tests\Fixtures\Error\TestDebugHandler;
 use Celema\Core\Tests\Fixtures\Error\TestRenderer;
+use Celema\Core\Tests\Fixtures\FailingLogger;
+use Celema\Core\Tests\Fixtures\RecordingLogger;
 use Celema\Server\Console;
 use DivisionByZeroError;
 use ErrorException;
@@ -178,6 +180,7 @@ final class ErrorHandlerTest extends TestCase
 	public function testDefaultRendererHandlesUnmatchedException(): void
 	{
 		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger(new RecordingLogger());
 		$handler->renderer(new TestRenderer());
 		$response = $handler->response(new DivisionByZeroError('test'), $this->request());
 
@@ -201,6 +204,7 @@ final class ErrorHandlerTest extends TestCase
 	public function testFallbackUsesServerErrorForGenericException(): void
 	{
 		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger(new RecordingLogger());
 		$response = $handler->response(new Exception('Boom'), $this->request());
 
 		$this->assertSame(500, $response->getStatusCode());
@@ -221,6 +225,7 @@ final class ErrorHandlerTest extends TestCase
 		$this->withCliServer(function (): void {
 			Console::clearException();
 			$handler = new Handler($this->factory()->responseFactory());
+			$handler->logger(new RecordingLogger());
 			$handler->renderer(new TestRenderer());
 
 			$handler->response(new Exception('Boom'), $this->request());
@@ -280,10 +285,79 @@ final class ErrorHandlerTest extends TestCase
 
 		$this->assertSame('critical', $logger->records[0]['level']);
 		$this->assertSame('Matched exception', $logger->records[0]['message']);
-		$this->assertSame('alert', $logger->records[1]['level']);
+		$this->assertSame('critical', $logger->records[1]['level']);
 		$this->assertSame('Unmatched exception', $logger->records[1]['message']);
 		$this->assertSame('notice', $logger->records[2]['level']);
 		$this->assertSame('Matched exception', $logger->records[2]['message']);
+	}
+
+	public function testLoggedExceptionsCarryTheRequestMethodAndPath(): void
+	{
+		$logger = new RecordingLogger();
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger($logger);
+		$request = $this->request(['REQUEST_METHOD' => 'POST', 'REQUEST_URI' => '/reset?token=secret']);
+
+		$handler->response(new Exception('Boom'), $request);
+
+		$this->assertSame('POST', $logger->records[0]['context']['method']);
+		$this->assertSame('/reset', $logger->records[0]['context']['path']);
+	}
+
+	public function testUnmatchedClientErrorsAreNotLogged(): void
+	{
+		$logger = new RecordingLogger();
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger($logger);
+		$request = $this->request();
+
+		$handler->response(new HttpNotFound($request), $request);
+
+		$this->assertSame([], $logger->records);
+	}
+
+	public function testServerErrorsGoToTheErrorLogWithoutALogger(): void
+	{
+		$handler = new Handler($this->factory()->responseFactory());
+		$request = $this->request(['REQUEST_URI' => '/broken']);
+
+		$log = $this->captureErrorLog(static fn() => $handler->response(new Exception('Boom'), $request));
+
+		$this->assertStringContainsString('Unmatched exception (GET /broken): Exception: Boom', $log);
+	}
+
+	public function testAFailingLoggerKeepsTheResponseAndTheException(): void
+	{
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger(new FailingLogger());
+		$handler->renderer(new TestRenderer());
+		$request = $this->request(['REQUEST_URI' => '/broken']);
+		$response = null;
+
+		$log = $this->captureErrorLog(static function () use ($handler, $request, &$response): void {
+			$response = $handler->response(new Exception('Boom'), $request);
+		});
+
+		$this->assertSame(Exception::class . ' rendered GET Boom', (string) $response?->getBody());
+		$this->assertStringContainsString('Logging failed: RuntimeException: log not writable', $log);
+		$this->assertStringContainsString('Unmatched exception (GET /broken): Exception: Boom', $log);
+	}
+
+	public function testHandleErrorLetsPhpReportWhenTheLoggerFails(): void
+	{
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger(new FailingLogger());
+		$reporting = error_reporting(E_ALL);
+
+		try {
+			$log = $this->captureErrorLog(function () use ($handler): void {
+				$this->assertFalse($handler->handleError(E_USER_DEPRECATED, 'old api'));
+			});
+		} finally {
+			error_reporting($reporting);
+		}
+
+		$this->assertStringContainsString('Logging failed: RuntimeException: log not writable', $log);
 	}
 
 	public function testAppErrorHandlerWrapsRouting(): void

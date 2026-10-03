@@ -84,6 +84,8 @@ Hooks run in registration order. Each one runs even if an earlier one failed.
 
 ### Failures
 
+The error handler logs the server errors it answers without a matching renderer at `critical`, and the exceptions of a renderer entry at the level set with its `log()` method. Records carry the exception and the request's `method` and `path` in the context. Without a logger, or when the logger fails, they go to `error_log()`. PHP diagnostics the handler does not turn into exceptions, deprecations by default, are logged at `notice`; without a logger, PHP reports them itself.
+
 Exceptions thrown while handling a request are the error handler's job. A throwable that escapes it, or the emitter, is logged through the PSR-3 logger registered with `$app->logger()` (otherwise with `error_log()`), and `run()` answers with a minimal `500` response if nothing was sent yet. Like PHP for an uncaught exception, that response shows the exception only while `display_errors` is on. In debug mode without a debug handler, the error handler lets exceptions escape on purpose, so they end up here. A failing teardown step is logged the same way; it never replaces the response that was already emitted.
 
 ## Worker mode

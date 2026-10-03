@@ -18,6 +18,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Psr\Log\LoggerInterface as Logger;
+use Psr\Log\LogLevel;
 use Throwable;
 
 /** @api */
@@ -30,6 +31,9 @@ class Handler implements Middleware
 	protected array $renderers = [];
 
 	protected ?RendererEntry $defaultRenderer = null;
+
+	/** The request whose exception response() answers, for the log context. */
+	private ?Request $request = null;
 
 	public function __construct(
 		protected readonly ResponseFactory $responseFactory,
@@ -102,13 +106,32 @@ class Handler implements Middleware
 			return false;
 		}
 
-		$this->logger->notice('PHP diagnostic', ['exception' => $exception]);
+		try {
+			$this->logger->notice('PHP diagnostic', ['exception' => $exception]);
+		} catch (Throwable $e) {
+			// A failing logger must not turn the diagnostic into an error
+			// at the line that raised it; PHP reports it instead.
+			error_log('Logging failed: ' . (string) $e);
+
+			return false;
+		}
 
 		// Prevent PHP from reporting the logged diagnostic again.
 		return true;
 	}
 
 	public function response(Throwable $exception, Request $request): Response
+	{
+		$this->request = $request;
+
+		try {
+			return $this->answer($exception, $request);
+		} finally {
+			$this->request = null;
+		}
+	}
+
+	private function answer(Throwable $exception, Request $request): Response
 	{
 		$exception = $this->normalize($exception, $request);
 		$renderer = null;
@@ -218,7 +241,7 @@ class Handler implements Middleware
 
 	protected function log(string|int $logLevel, Throwable $exception): void
 	{
-		$this->logger?->log($logLevel, 'Matched exception', ['exception' => $exception]);
+		$this->write($logLevel, 'Matched exception', $exception);
 	}
 
 	protected function recordServerException(Throwable $exception): void
@@ -232,7 +255,43 @@ class Handler implements Middleware
 
 	protected function logUnmatched(Throwable $exception): void
 	{
-		$this->logger?->alert('Unmatched exception', ['exception' => $exception]);
+		// A client error is no server failure; a renderer entry's log level
+		// can still record it.
+		if ($this->status($exception) < 500) {
+			return;
+		}
+
+		$this->write(LogLevel::CRITICAL, 'Unmatched exception', $exception);
+	}
+
+	/**
+	 * Logs the exception with the request it interrupted. Without a logger,
+	 * or when the logger fails, the record goes to PHP's error log: the
+	 * handler answers the exception itself, so PHP would never report it,
+	 * and a logger that cannot write must not replace the response.
+	 */
+	private function write(string|int $level, string $message, Throwable $exception): void
+	{
+		$context = ['exception' => $exception];
+
+		if ($this->request !== null) {
+			// The path only: query strings can carry tokens.
+			$context['method'] = $this->request->getMethod();
+			$context['path'] = $this->request->getUri()->getPath();
+		}
+
+		if ($this->logger !== null) {
+			try {
+				$this->logger->log($level, $message, $context);
+
+				return;
+			} catch (Throwable $e) {
+				error_log('Logging failed: ' . (string) $e);
+			}
+		}
+
+		$request = isset($context['method'], $context['path']) ? " ({$context['method']} {$context['path']})" : '';
+		error_log($message . $request . ': ' . (string) $exception);
 	}
 
 	private function escape(string $value): string
