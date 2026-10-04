@@ -15,7 +15,18 @@ final class EmitterSapiTest extends TestCase
 {
 	protected function setUp(): void
 	{
+		parent::setUp();
+
 		SapiState::reset();
+	}
+
+	// The SAPI function overrides are global, so later tests must not see
+	// the state left behind here (e.g. headers already sent).
+	protected function tearDown(): void
+	{
+		SapiState::reset();
+
+		parent::tearDown();
 	}
 
 	private function emit(
