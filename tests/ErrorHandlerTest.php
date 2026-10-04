@@ -15,6 +15,7 @@ use Celema\Server\Console;
 use DivisionByZeroError;
 use ErrorException;
 use Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -86,11 +87,13 @@ final class ErrorHandlerTest extends TestCase
 		$this->assertSame($expected, $response);
 		$this->assertSame('completed', (string) $response->getBody());
 		$this->assertSame('notice', $logger->records[0]['level']);
-		$this->assertSame('PHP diagnostic', $logger->records[0]['message']);
+		$this->assertSame('PHP {type}: {diagnostic} in {file} on line {line}', $logger->records[0]['message']);
 		$exception = $logger->records[0]['context']['exception'] ?? null;
 		$this->assertInstanceOf(ErrorException::class, $exception);
 		$this->assertSame('deprecated call', $exception->getMessage());
 		$this->assertSame(E_USER_DEPRECATED, $exception->getSeverity());
+		$this->assertSame('Deprecated', $logger->records[0]['context']['type']);
+		$this->assertSame('deprecated call', $logger->records[0]['context']['diagnostic']);
 	}
 
 	public function testProcessScopesPhpErrorHandler(): void
@@ -162,6 +165,32 @@ final class ErrorHandlerTest extends TestCase
 		} finally {
 			error_reporting($reporting);
 		}
+	}
+
+	/** @return iterable<string, array{int, string}> */
+	public static function diagnostics(): iterable
+	{
+		yield 'deprecation' => [E_USER_DEPRECATED, 'Deprecated'];
+		yield 'notice' => [E_USER_NOTICE, 'Notice'];
+		yield 'warning' => [E_USER_WARNING, 'Warning'];
+		yield 'other' => [E_RECOVERABLE_ERROR, 'Error'];
+	}
+
+	#[DataProvider('diagnostics')]
+	public function testLoggedDiagnosticsNameTheirType(int $level, string $type): void
+	{
+		$logger = new RecordingLogger();
+		$handler = new Handler($this->factory()->responseFactory(), exceptionLevels: 0);
+		$handler->logger($logger);
+		$reporting = error_reporting(E_ALL);
+
+		try {
+			$handler->handleError($level, 'diagnostic', 'view.php', 7);
+		} finally {
+			error_reporting($reporting);
+		}
+
+		$this->assertSame($type, $logger->records[0]['context']['type']);
 	}
 
 	public function testDeprecationsCanBeConvertedToExceptions(): void
@@ -284,11 +313,11 @@ final class ErrorHandlerTest extends TestCase
 		$defaultHandler->response(new Exception('default'), $this->request());
 
 		$this->assertSame('critical', $logger->records[0]['level']);
-		$this->assertSame('Matched exception', $logger->records[0]['message']);
+		$this->assertSame('Server error {status} for {method} {path}', $logger->records[0]['message']);
 		$this->assertSame('critical', $logger->records[1]['level']);
-		$this->assertSame('Unmatched exception', $logger->records[1]['message']);
+		$this->assertSame('Server error {status} for {method} {path}', $logger->records[1]['message']);
 		$this->assertSame('notice', $logger->records[2]['level']);
-		$this->assertSame('Matched exception', $logger->records[2]['message']);
+		$this->assertSame('Server error {status} for {method} {path}', $logger->records[2]['message']);
 	}
 
 	public function testLoggedExceptionsCarryTheRequestMethodAndPath(): void
@@ -302,6 +331,22 @@ final class ErrorHandlerTest extends TestCase
 
 		$this->assertSame('POST', $logger->records[0]['context']['method']);
 		$this->assertSame('/reset', $logger->records[0]['context']['path']);
+	}
+
+	public function testClientErrorsAreLoggedAtTheLevelOfTheirRenderer(): void
+	{
+		$logger = new RecordingLogger();
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger($logger);
+		$handler->renderer(new TestRenderer(), HttpNotFound::class)->log('info');
+		$request = $this->request(['REQUEST_URI' => '/missing']);
+
+		$handler->response(new HttpNotFound($request), $request);
+
+		$this->assertSame('info', $logger->records[0]['level']);
+		$this->assertSame('Client error {status} for {method} {path}', $logger->records[0]['message']);
+		$this->assertSame(404, $logger->records[0]['context']['status']);
+		$this->assertSame('/missing', $logger->records[0]['context']['path']);
 	}
 
 	public function testUnmatchedClientErrorsAreNotLogged(): void
@@ -323,7 +368,7 @@ final class ErrorHandlerTest extends TestCase
 
 		$log = $this->captureErrorLog(static fn() => $handler->response(new Exception('Boom'), $request));
 
-		$this->assertStringContainsString('Unmatched exception (GET /broken): Exception: Boom', $log);
+		$this->assertStringContainsString('Server error 500 for GET /broken: Exception: Boom', $log);
 	}
 
 	public function testAFailingLoggerKeepsTheResponseAndTheException(): void
@@ -340,7 +385,7 @@ final class ErrorHandlerTest extends TestCase
 
 		$this->assertSame(Exception::class . ' rendered GET Boom', (string) $response?->getBody());
 		$this->assertStringContainsString('Logging failed: RuntimeException: log not writable', $log);
-		$this->assertStringContainsString('Unmatched exception (GET /broken): Exception: Boom', $log);
+		$this->assertStringContainsString('Server error 500 for GET /broken: Exception: Boom', $log);
 	}
 
 	public function testHandleErrorLetsPhpReportWhenTheLoggerFails(): void

@@ -84,9 +84,9 @@ Hooks run in registration order. Each one runs even if an earlier one failed.
 
 ### Failures
 
-The error handler logs the server errors it answers without a matching renderer at `critical`, and the exceptions of a renderer entry at the level set with its `log()` method. Records carry the exception and the request's `method` and `path` in the context. Without a logger, or when the logger fails, they go to `error_log()`. PHP diagnostics the handler does not turn into exceptions, deprecations by default, are logged at `notice`; without a logger, PHP reports them itself.
+The error handler logs the server errors it answers without a matching renderer at `critical`, and the exceptions of a renderer entry at the level set with its `log()` method, as `Server error {status} for {method} {path}` or `Client error …`. The context carries the exception and the placeholder values; the path leaves out the query string, which can carry tokens. Without a logger, or when the logger fails, records go to `error_log()`. PHP diagnostics the handler does not turn into exceptions, deprecations by default, are logged at `notice` as `PHP {type}: {diagnostic} in {file} on line {line}`; without a logger, PHP reports them itself.
 
-Exceptions thrown while handling a request are the error handler's job. A throwable that escapes it, or the emitter, is logged through the PSR-3 logger registered with `$app->logger()` (otherwise with `error_log()`), and `run()` answers with a minimal `500` response if nothing was sent yet. Like PHP for an uncaught exception, that response shows the exception only while `display_errors` is on. In debug mode without a debug handler, the error handler lets exceptions escape on purpose, so they end up here. A failing teardown step is logged the same way; it never replaces the response that was already emitted.
+Exceptions thrown while handling a request are the error handler's job. A throwable that escapes it, or the emitter, is logged as `Unhandled exception for {method} {path}` through the PSR-3 logger registered with `$app->logger()` (otherwise with `error_log()`), and `run()` answers with a minimal `500` response if nothing was sent yet. Like PHP for an uncaught exception, that response shows the exception only while `display_errors` is on. In debug mode without a debug handler, the error handler lets exceptions escape on purpose, so they end up here. A failing teardown step is logged the same way; it never replaces the response that was already emitted.
 
 ## Worker mode
 
@@ -124,6 +124,7 @@ Things to keep in mind:
 - FrankenPHP rebuilds `$_SERVER` for every request: values a script writes into it at boot, for example a `.env` loader, are gone in the requests, while process environment variables are available in each request. `$_ENV` and `putenv()` persist across requests and are shared by all threads of the process.
 - The worker clears PHP's file stat cache before each request, so `filemtime()` and `filesize()` see changes made by other processes.
 - Code must finish a request by returning a response. `exit()` and `die()` end the worker; FrankenPHP restarts it, at the cost of a fresh boot.
+- The logger is shared too. One that buffers records or keeps per-request state, such as Monolog with a `BufferHandler`, `FingersCrossedHandler` or `UidProcessor`, needs a reset after each request: `$app->teardown(static fn() => $logger->reset());`.
 - Each worker keeps its own resources, such as a database connection, open between requests. Budget the database connections for the number of workers of all sites sharing a database server.
 - `Response::sendfile()` chooses `X-Accel-Redirect` or `X-Sendfile` from `$_SERVER['SERVER_SOFTWARE']` per request.
 

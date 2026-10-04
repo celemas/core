@@ -2,6 +2,11 @@
 
 ## [Unreleased](https://codefloe.com/celema/core/compare/0.7.0...HEAD)
 
+### Breaking Changes
+
+- Log messages name the request and what went wrong, with PSR-3 placeholders: `Server error {status} for {method} {path}` and `Client error {status} for {method} {path}` replace `Unmatched exception` and `Matched exception`, `PHP {type}: {diagnostic} in {file} on line {line}` replaces `PHP diagnostic`, and `Unhandled exception` and `Request teardown failed` end in `for {method} {path}`. The context carries the placeholder values; the path leaves out the query string.
+- `Error\Handler::log()` and `Error\Handler::logUnmatched()` take the request as their last argument; `App::report()` and `App::finish()` take the request, or `null` when creating it failed.
+
 ### Fixed
 
 - A logger that throws while the error handler logs an exception no longer replaces the rendered response with a minimal `500` and hides the original exception: the logging failure and the record go to `error_log()`. A logger failing on a PHP diagnostic lets PHP report the diagnostic instead of throwing at the line that raised it.
@@ -10,7 +15,7 @@
 
 ### Changed
 
-- Error handler log records carry the request's `method` and `path` in the context.
+- The README's worker-mode section explains when a shared logger needs a reset after each request.
 
 ## [0.7.0](https://codefloe.com/celema/core/src/tag/0.7.0) (2026-10-02)
 

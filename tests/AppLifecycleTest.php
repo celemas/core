@@ -109,8 +109,10 @@ final class AppLifecycleTest extends TestCase
 		$this->assertSame(false, $result);
 		$this->assertSame(500, $emitter->responses[0]->getStatusCode());
 		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[0]);
-		$this->assertSame(['Unhandled exception'], $logger->messages());
+		$this->assertSame(['Unhandled exception for {method} {path}'], $logger->messages());
 		$this->assertSame('view failed', $logger->records[0]['context']['exception']->getMessage());
+		$this->assertSame('GET', $logger->records[0]['context']['method']);
+		$this->assertSame('/', $logger->records[0]['context']['path']);
 		$this->assertSame(true, $tornDown);
 		$this->assertSame(false, $app->reusable());
 	}
@@ -168,7 +170,7 @@ final class AppLifecycleTest extends TestCase
 		$app->run($this->request());
 
 		$this->assertSame(500, $emitter->responses[0]->getStatusCode());
-		$this->assertSame(['Unhandled exception'], $logger->messages());
+		$this->assertSame(['Unhandled exception for {method} {path}'], $logger->messages());
 		$this->assertSame(false, $app->reusable());
 	}
 
@@ -237,7 +239,10 @@ final class AppLifecycleTest extends TestCase
 		$this->assertInstanceOf(ResponseInterface::class, $result);
 		$this->assertSame(['ok'], $emitter->bodies());
 		$this->assertSame(true, $secondRan);
-		$this->assertSame(['Request teardown failed', 'Request teardown failed'], $logger->messages());
+		$this->assertSame(
+			['Request teardown failed for {method} {path}', 'Request teardown failed for {method} {path}'],
+			$logger->messages(),
+		);
 		$this->assertSame('reset failed', $logger->records[0]['context']['exception']->getMessage());
 		$this->assertSame('hook failed', $logger->records[1]['context']['exception']->getMessage());
 		$this->assertSame(false, $app->reusable());
@@ -252,7 +257,10 @@ final class AppLifecycleTest extends TestCase
 		$request = $this->request();
 		$log = $this->captureErrorLog(static fn() => $app->run($request));
 
-		$this->assertStringContainsString('Unhandled exception: RuntimeException: logged without logger', $log);
+		$this->assertStringContainsString(
+			'Unhandled exception for GET /: RuntimeException: logged without logger',
+			$log,
+		);
 	}
 
 	public function testUnresolvableLoggerFallsBackToTheErrorLog(): void
@@ -285,7 +293,7 @@ final class AppLifecycleTest extends TestCase
 		$this->assertSame(500, $emitter->responses[0]->getStatusCode());
 		$this->assertSame(true, $tornDown);
 		$this->assertStringContainsString('Logging failed: RuntimeException: log not writable', $log);
-		$this->assertStringContainsString('Unhandled exception: RuntimeException: view failed', $log);
+		$this->assertStringContainsString('Unhandled exception for GET /: RuntimeException: view failed', $log);
 	}
 
 	public function testFailingLoggerDoesNotReplaceTheResponseDuringTeardown(): void
@@ -303,7 +311,7 @@ final class AppLifecycleTest extends TestCase
 
 		$this->assertInstanceOf(ResponseInterface::class, $result);
 		$this->assertSame(['1'], $emitter->bodies());
-		$this->assertStringContainsString('Request teardown failed: RuntimeException: hook failed', $log);
+		$this->assertStringContainsString('Request teardown failed for GET /: RuntimeException: hook failed', $log);
 		$this->assertSame(false, $app->reusable());
 	}
 

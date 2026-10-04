@@ -11,6 +11,7 @@ use Celema\Core\Emitter\Emitter;
 use Celema\Core\Emitter\Fallback;
 use Celema\Core\Emitter\Sapi;
 use Celema\Core\Error\Handler as ErrorHandler;
+use Celema\Core\Error\Log;
 use Celema\Core\Factory\Factory;
 use Celema\Core\Factory\Nyholm;
 use Celema\Core\Runtime\FrankenPhpWorker;
@@ -30,6 +31,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Psr\Log\LoggerInterface as Logger;
+use Psr\Log\LogLevel;
 use Throwable;
 
 /** @api */
@@ -202,7 +204,7 @@ class App implements RouteAdder, RequestHandler
 
 			throw $e;
 		} finally {
-			$this->finish($scope);
+			$this->finish($scope, $request);
 		}
 	}
 
@@ -224,14 +226,14 @@ class App implements RouteAdder, RequestHandler
 			return $this->emitter->emit($response, $request->getMethod() === 'HEAD') ? $response : false;
 		} catch (Throwable $e) {
 			$this->reusable = false;
-			$this->report('Unhandled exception', $e);
+			$this->report('Unhandled exception', $e, $request);
 			$this->recordServerException($e);
 			// The method is unknown if creating the request failed.
 			$this->emitFailure($bufferLevel, $e, $request?->getMethod() === 'HEAD');
 
 			return false;
 		} finally {
-			$this->finish($scope);
+			$this->finish($scope, $request);
 		}
 	}
 
@@ -291,7 +293,7 @@ class App implements RouteAdder, RequestHandler
 	 * attempted; failures are logged and make the app unusable for further
 	 * requests, but never replace the request's response or exception.
 	 */
-	protected function finish(Container $scope): void
+	protected function finish(Container $scope, ?Request $request): void
 	{
 		$failures = [];
 
@@ -311,29 +313,34 @@ class App implements RouteAdder, RequestHandler
 
 		foreach ($failures as $failure) {
 			$this->reusable = false;
-			$this->report('Request teardown failed', $failure);
+			$this->report('Request teardown failed', $failure, $request);
 		}
 	}
 
-	protected function report(string $message, Throwable $exception): void
+	/**
+	 * Logs a failure the error handler did not answer, naming the request
+	 * it belongs to. The request is unknown when creating it failed.
+	 */
+	protected function report(string $message, Throwable $exception, ?Request $request): void
 	{
 		try {
 			/** @var mixed $logger */
 			$logger = $this->container->has(Logger::class) ? $this->container->get(Logger::class) : null;
-
-			if ($logger instanceof Logger) {
-				$logger->critical($message, ['exception' => $exception]);
-
-				return;
-			}
 		} catch (Throwable $e) {
-			// A logger that cannot be resolved or cannot write, for example
-			// to an unwritable file, must not keep the failure from being
-			// answered or the request from being torn down.
+			// A logger that cannot be resolved must not keep the failure from
+			// being answered or the request from being torn down.
 			error_log('Logging failed: ' . (string) $e);
+			$logger = null;
 		}
 
-		error_log($message . ': ' . (string) $exception);
+		$values = [];
+
+		if ($request !== null) {
+			$message .= ' for {method} {path}';
+			$values = Log::request($request);
+		}
+
+		Log::write($logger instanceof Logger ? $logger : null, LogLevel::CRITICAL, $message, $exception, $values);
 	}
 
 	protected function recordServerException(Throwable $exception): void

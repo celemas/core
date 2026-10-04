@@ -32,9 +32,6 @@ class Handler implements Middleware
 
 	protected ?RendererEntry $defaultRenderer = null;
 
-	/** The request whose exception response() answers, for the log context. */
-	private ?Request $request = null;
-
 	public function __construct(
 		protected readonly ResponseFactory $responseFactory,
 		protected readonly bool $debug = false,
@@ -106,32 +103,24 @@ class Handler implements Middleware
 			return false;
 		}
 
-		try {
-			$this->logger->notice('PHP diagnostic', ['exception' => $exception]);
-		} catch (Throwable $e) {
-			// A failing logger must not turn the diagnostic into an error
-			// at the line that raised it; PHP reports it instead.
-			error_log('Logging failed: ' . (string) $e);
-
-			return false;
-		}
-
-		// Prevent PHP from reporting the logged diagnostic again.
-		return true;
+		// True keeps PHP from reporting a logged diagnostic again. One the
+		// logger failed on is left to PHP rather than thrown at the line
+		// that raised it.
+		return Log::attempt(
+			$this->logger,
+			LogLevel::NOTICE,
+			'PHP {type}: {diagnostic} in {file} on line {line}',
+			$exception,
+			[
+				'type' => self::diagnosticType($level),
+				'diagnostic' => $message,
+				'file' => $file,
+				'line' => $line,
+			],
+		);
 	}
 
 	public function response(Throwable $exception, Request $request): Response
-	{
-		$this->request = $request;
-
-		try {
-			return $this->answer($exception, $request);
-		} finally {
-			$this->request = null;
-		}
-	}
-
-	private function answer(Throwable $exception, Request $request): Response
 	{
 		$exception = $this->normalize($exception, $request);
 		$renderer = null;
@@ -148,7 +137,7 @@ class Handler implements Middleware
 		}
 
 		if ($logLevel !== null) {
-			$this->log($logLevel, $exception);
+			$this->log($logLevel, $exception, $request);
 		}
 
 		if ($renderer) {
@@ -176,9 +165,9 @@ class Handler implements Middleware
 			$logLevel = $this->defaultRenderer->logLevel();
 
 			if ($logLevel !== null) {
-				$this->log($logLevel, $exception);
+				$this->log($logLevel, $exception, $request);
 			} else {
-				$this->logUnmatched($exception);
+				$this->logUnmatched($exception, $request);
 			}
 
 			$this->recordServerException($exception);
@@ -191,7 +180,7 @@ class Handler implements Middleware
 			);
 		}
 
-		$this->logUnmatched($exception);
+		$this->logUnmatched($exception, $request);
 		$this->recordServerException($exception);
 
 		return $this->fallback($exception);
@@ -239,9 +228,15 @@ class Handler implements Middleware
 		return $status >= 400 && $status <= 599 ? $status : 500;
 	}
 
-	protected function log(string|int $logLevel, Throwable $exception): void
+	protected function log(string|int $logLevel, Throwable $exception, Request $request): void
 	{
-		$this->write($logLevel, 'Matched exception', $exception);
+		$status = $this->status($exception);
+		$kind = $status >= 500 ? 'Server' : 'Client';
+
+		Log::write($this->logger, $logLevel, $kind . ' error {status} for {method} {path}', $exception, [
+			'status' => $status,
+			...Log::request($request),
+		]);
 	}
 
 	protected function recordServerException(Throwable $exception): void
@@ -253,7 +248,7 @@ class Handler implements Middleware
 		}
 	}
 
-	protected function logUnmatched(Throwable $exception): void
+	protected function logUnmatched(Throwable $exception, Request $request): void
 	{
 		// A client error is no server failure; a renderer entry's log level
 		// can still record it.
@@ -261,37 +256,17 @@ class Handler implements Middleware
 			return;
 		}
 
-		$this->write(LogLevel::CRITICAL, 'Unmatched exception', $exception);
+		$this->log(LogLevel::CRITICAL, $exception, $request);
 	}
 
-	/**
-	 * Logs the exception with the request it interrupted. Without a logger,
-	 * or when the logger fails, the record goes to PHP's error log: the
-	 * handler answers the exception itself, so PHP would never report it,
-	 * and a logger that cannot write must not replace the response.
-	 */
-	private function write(string|int $level, string $message, Throwable $exception): void
+	private static function diagnosticType(int $level): string
 	{
-		$context = ['exception' => $exception];
-
-		if ($this->request !== null) {
-			// The path only: query strings can carry tokens.
-			$context['method'] = $this->request->getMethod();
-			$context['path'] = $this->request->getUri()->getPath();
-		}
-
-		if ($this->logger !== null) {
-			try {
-				$this->logger->log($level, $message, $context);
-
-				return;
-			} catch (Throwable $e) {
-				error_log('Logging failed: ' . (string) $e);
-			}
-		}
-
-		$request = isset($context['method'], $context['path']) ? " ({$context['method']} {$context['path']})" : '';
-		error_log($message . $request . ': ' . (string) $exception);
+		return match ($level) {
+			E_DEPRECATED, E_USER_DEPRECATED => 'Deprecated',
+			E_NOTICE, E_USER_NOTICE => 'Notice',
+			E_WARNING, E_USER_WARNING => 'Warning',
+			default => 'Error',
+		};
 	}
 
 	private function escape(string $value): string
