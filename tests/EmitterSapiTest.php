@@ -148,6 +148,26 @@ final class EmitterSapiTest extends TestCase
 		$this->assertSame('2345', $output);
 	}
 
+	public function testContentRangeOfASingleByte(): void
+	{
+		$response = $this
+			->response()
+			->withHeader('Content-Range', 'bytes 5-5/10')
+			->withBody(new TestStream('0123456789'));
+
+		$this->assertSame('5', $this->emit($response));
+	}
+
+	public function testContentRangeEndingOnABufferBoundary(): void
+	{
+		$response = $this
+			->response()
+			->withHeader('Content-Range', 'bytes 0-3/10')
+			->withBody($this->factory()->stream('0123456789'));
+
+		$this->assertSame('0123', $this->emit($response, maxBufferLength: 2));
+	}
+
 	public function testContentRangeWithUnknownLength(): void
 	{
 		$response = $this
@@ -191,6 +211,8 @@ final class EmitterSapiTest extends TestCase
 	#[TestWith(['bytes 5-2/10'])]
 	#[TestWith(['items 0-1/10'])]
 	#[TestWith(['bytes 0-1'])]
+	#[TestWith(['xbytes 0-1/10'])]
+	#[TestWith(['bytes 0-1/10x'])]
 	public function testInvalidContentRangeEmitsWholeBody(string $contentRange): void
 	{
 		$response = $this
@@ -199,6 +221,19 @@ final class EmitterSapiTest extends TestCase
 			->withBody(new TestStream('0123456789'));
 
 		$this->assertSame('0123456789', $this->emit($response));
+	}
+
+	public function testBodyIsEmittedByDefault(): void
+	{
+		ob_start();
+
+		try {
+			new Sapi()->emit($this->response()->withBody(new TestStream('hello')));
+		} finally {
+			$output = (string) ob_get_clean();
+		}
+
+		$this->assertSame('hello', $output);
 	}
 
 	public function testHeadersSentThrows(): void

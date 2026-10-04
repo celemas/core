@@ -11,8 +11,11 @@ use Celema\Core\Emitter\Sapi;
 use Celema\Core\Factory\Factory;
 use Celema\Core\Factory\Nyholm;
 use Celema\Core\Plugin;
+use Celema\Core\Response as CoreResponse;
 use Celema\Core\Tests\Fixtures\TestContainer;
 use Celema\Core\Tests\Fixtures\TestLogger;
+use Celema\Router\After;
+use Celema\Router\Before;
 use Celema\Router\Router;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -161,6 +164,74 @@ final class AppTest extends TestCase
 
 		$this->assertInstanceof(Router::class, $container->get(Router::class));
 		$this->assertInstanceof(Factory::class, $container->get(Factory::class));
+	}
+
+	public function testContainerResolvesTheAppsRouterAndFactory(): void
+	{
+		$router = new class extends Router {};
+		$factory = new Nyholm();
+		$app = new App($factory, $router, new Container());
+		$container = $app->container();
+
+		$this->assertSame($router, $container->get(Router::class));
+		$this->assertSame($router, $container->get($router::class));
+		$this->assertSame($factory, $container->get(Factory::class));
+		$this->assertSame($factory, $container->get(Nyholm::class));
+	}
+
+	public function testRunReturnsFalseWhenTheEmitterFails(): void
+	{
+		$app = $this->app();
+		$app->emitter(new class implements Emitter {
+			public function emit(ResponseInterface $response, bool $withoutBody = false): bool
+			{
+				return false;
+			}
+		});
+		$app->any('/', [Fixtures\TestController::class, 'textView']);
+
+		$this->assertFalse($app->run($this->request()));
+	}
+
+	public function testAppLevelBeforeAndAfterHandlersWrapTheView(): void
+	{
+		$app = $this->app();
+		$app->emitter(new Fixtures\RecordingEmitter());
+		$app->before(new class implements Before {
+			public function handle(ServerRequestInterface $request): ServerRequestInterface
+			{
+				return $request->withAttribute('greeting', 'before');
+			}
+
+			public function replace(Before $handler): bool
+			{
+				return false;
+			}
+		});
+		$app->after(new class implements After {
+			public function handle(mixed $data): mixed
+			{
+				assert($data instanceof ResponseInterface, 'The view returns a response');
+
+				return $data->withHeader('X-After', 'after');
+			}
+
+			public function replace(After $handler): bool
+			{
+				return false;
+			}
+		});
+		$app->get('/', static fn(ServerRequestInterface $request): ResponseInterface => CoreResponse::create(
+			$app->factory(),
+		)
+			->body((string) $request->getAttribute('greeting'))
+			->unwrap());
+
+		$response = $app->run($this->request());
+
+		$this->assertInstanceOf(ResponseInterface::class, $response);
+		$this->assertSame('before', (string) $response->getBody());
+		$this->assertSame('after', $response->getHeaderLine('X-After'));
 	}
 
 	public function testLoadPlugin(): void

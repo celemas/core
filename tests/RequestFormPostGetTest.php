@@ -69,6 +69,14 @@ final class RequestFormPostGetTest extends TestCase
 		$this->assertSame('the default', $request->field('doesnotexist', 'the default'));
 	}
 
+	public function testWithoutParsedBody(): void
+	{
+		$request = new Request($this->request()->withParsedBody(null));
+
+		$this->assertNull($request->form());
+		$this->assertSame('the default', $request->field('doesnotexist', 'the default'));
+	}
+
 	public function testFieldDefaultPostIsArray(): void
 	{
 		$request = new Request($this->request(

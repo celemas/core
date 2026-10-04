@@ -12,6 +12,7 @@ use Celema\Core\Runtime\FrankenPhpWorker;
 use Celema\Core\Tests\Fixtures\RecordingEmitter;
 use Celema\Core\Tests\Fixtures\RecordingLogger;
 use Celema\Core\Tests\Fixtures\WorkerState;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use RuntimeException as PhpRuntimeException;
@@ -19,12 +20,14 @@ use RuntimeException as PhpRuntimeException;
 final class FrankenPhpWorkerTest extends TestCase
 {
 	private array $server = [];
+	private array $env = [];
 
 	protected function setUp(): void
 	{
 		parent::setUp();
 
 		$this->server = $_SERVER;
+		$this->env = $_ENV;
 		$_SERVER['REQUEST_METHOD'] = 'GET';
 		$_SERVER['REQUEST_URI'] = '/';
 		$_SERVER['HTTP_HOST'] = 'www.example.com';
@@ -34,6 +37,8 @@ final class FrankenPhpWorkerTest extends TestCase
 	protected function tearDown(): void
 	{
 		$_SERVER = $this->server;
+		$_ENV = $this->env;
+		putenv(FrankenPhpWorker::MAX_REQUESTS);
 		WorkerState::reset();
 
 		parent::tearDown();
@@ -123,16 +128,18 @@ final class FrankenPhpWorkerTest extends TestCase
 	{
 		$file = (string) tempnam(sys_get_temp_dir(), 'celema-stat');
 		file_put_contents($file, 'a');
-		$this->assertSame(1, filesize($file));
-		$handle = fopen($file, 'a');
-		fwrite($handle, 'b');
-		fclose($handle);
 		$app = App::create();
 		$app->emitter($emitter = new RecordingEmitter());
-		$app->get('/', static fn(Factory $factory): Response => Response::create($factory)->text(
-			(string) filesize($file),
-		));
+		$app->get('/', static function (Factory $factory) use ($file): Response {
+			$size = filesize($file);
+			// PHP clears its stat cache for its own writes, so the change
+			// has to come from another process, like a deployment would.
+			exec('printf b >> ' . escapeshellarg($file));
+
+			return Response::create($factory)->text((string) $size);
+		});
 		$_SERVER['FRANKENPHP_WORKER'] = '1';
+		WorkerState::request();
 		WorkerState::request();
 
 		try {
@@ -141,7 +148,35 @@ final class FrankenPhpWorkerTest extends TestCase
 			unlink($file);
 		}
 
-		$this->assertSame(['2'], $emitter->bodies());
+		$this->assertSame(['1', '2'], $emitter->bodies());
+	}
+
+	public function testWorkerKeepsRunningRequestsWhenClientsDisconnect(): void
+	{
+		[$app] = $this->workerApp();
+		$_SERVER['FRANKENPHP_WORKER'] = '1';
+		WorkerState::request();
+		$previous = ignore_user_abort();
+
+		try {
+			ignore_user_abort(false);
+			$app->serve();
+			$this->assertSame(1, ignore_user_abort());
+		} finally {
+			ignore_user_abort((bool) $previous);
+		}
+	}
+
+	public function testWorkerWithoutMemoryLimitKeepsServing(): void
+	{
+		[$app, $emitter] = $this->workerApp();
+		$_SERVER['FRANKENPHP_WORKER'] = '1';
+		WorkerState::request(['REQUEST_URI' => '/a']);
+		WorkerState::request(['REQUEST_URI' => '/b']);
+
+		$app->serve(maxMemory: 0);
+
+		$this->assertSame(['/a', '/b'], $emitter->bodies());
 	}
 
 	public function testLimitsComeFromTheWorkerEnvironment(): void
@@ -191,19 +226,68 @@ final class FrankenPhpWorkerTest extends TestCase
 		$this->assertSame(0, $limited->maxRequests);
 	}
 
-	public function testInvalidRequestLimitIsRejected(): void
+	public function testLimitsAcceptSurroundingWhitespaceAndLowercaseUnits(): void
 	{
-		$this->throws(RuntimeException::class, FrankenPhpWorker::MAX_REQUESTS);
+		$_SERVER[FrankenPhpWorker::MAX_REQUESTS] = ' 5 ';
+		$_SERVER[FrankenPhpWorker::MAX_MEMORY] = '64m';
 
-		$_SERVER[FrankenPhpWorker::MAX_REQUESTS] = 'many';
+		$worker = FrankenPhpWorker::configure(static fn(callable $callback): bool => false);
+
+		$this->assertSame(5, $worker->maxRequests);
+		$this->assertSame(64 * 1024 * 1024, $worker->maxMemory);
+	}
+
+	public function testServerVariablesWinOverEnvironmentVariables(): void
+	{
+		putenv(FrankenPhpWorker::MAX_REQUESTS . '=3');
+		$_ENV[FrankenPhpWorker::MAX_REQUESTS] = '2';
+		$fromEnv = FrankenPhpWorker::configure(static fn(callable $callback): bool => false);
+		$_SERVER[FrankenPhpWorker::MAX_REQUESTS] = '1';
+		$fromServer = FrankenPhpWorker::configure(static fn(callable $callback): bool => false);
+		unset($_SERVER[FrankenPhpWorker::MAX_REQUESTS], $_ENV[FrankenPhpWorker::MAX_REQUESTS]);
+		$fromProcess = FrankenPhpWorker::configure(static fn(callable $callback): bool => false);
+
+		$this->assertSame(2, $fromEnv->maxRequests);
+		$this->assertSame(1, $fromServer->maxRequests);
+		$this->assertSame(3, $fromProcess->maxRequests);
+	}
+
+	/** @return iterable<string, array{string}> */
+	public static function invalidRequestLimits(): iterable
+	{
+		yield 'word' => ['many'];
+		yield 'trailing text' => ['12abc'];
+		yield 'leading text' => ['abc12'];
+	}
+
+	#[DataProvider('invalidRequestLimits')]
+	public function testInvalidRequestLimitIsRejected(string $value): void
+	{
+		$this->throws(
+			RuntimeException::class,
+			FrankenPhpWorker::MAX_REQUESTS . ' must be a number of requests, 0 for no limit',
+		);
+
+		$_SERVER[FrankenPhpWorker::MAX_REQUESTS] = $value;
 		FrankenPhpWorker::configure(static fn(callable $callback): bool => false);
 	}
 
-	public function testInvalidMemoryLimitIsRejected(): void
+	/** @return iterable<string, array{string}> */
+	public static function invalidMemoryLimits(): iterable
 	{
-		$this->throws(RuntimeException::class, FrankenPhpWorker::MAX_MEMORY);
+		yield 'percentage' => ['80%'];
+		yield 'leading text' => ['x64M'];
+	}
 
-		$_SERVER[FrankenPhpWorker::MAX_MEMORY] = '80%';
+	#[DataProvider('invalidMemoryLimits')]
+	public function testInvalidMemoryLimitIsRejected(string $value): void
+	{
+		$this->throws(
+			RuntimeException::class,
+			FrankenPhpWorker::MAX_MEMORY . ' must be a number of bytes, optionally with K, M or G, 0 for no limit',
+		);
+
+		$_SERVER[FrankenPhpWorker::MAX_MEMORY] = $value;
 		FrankenPhpWorker::configure(static fn(callable $callback): bool => false);
 	}
 

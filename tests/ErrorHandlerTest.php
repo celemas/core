@@ -5,17 +5,23 @@ declare(strict_types=1);
 namespace Celema\Core\Tests;
 
 use Celema\Core\Error\Handler;
+use Celema\Core\Error\Renderer;
+use Celema\Core\Error\RendererEntry;
+use Celema\Core\Exception\HttpBadRequest;
+use Celema\Core\Exception\HttpMethodNotAllowed;
 use Celema\Core\Exception\HttpNotFound;
 use Celema\Core\Response as CoreResponse;
 use Celema\Core\Tests\Fixtures\Error\TestDebugHandler;
 use Celema\Core\Tests\Fixtures\Error\TestRenderer;
 use Celema\Core\Tests\Fixtures\FailingLogger;
 use Celema\Core\Tests\Fixtures\RecordingLogger;
+use Celema\Router\Exception\MethodNotAllowedException;
 use Celema\Server\Console;
 use DivisionByZeroError;
 use ErrorException;
 use Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Psr\Http\Message\ResponseFactoryInterface as ResponseFactory;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -154,6 +160,18 @@ final class ErrorHandlerTest extends TestCase
 		$this->fail('ErrorException was not thrown.');
 	}
 
+	public function testHandleErrorIgnoresLevelsExcludedFromErrorReporting(): void
+	{
+		$handler = new Handler($this->factory()->responseFactory());
+		$reporting = error_reporting(E_ALL & ~E_WARNING);
+
+		try {
+			$this->assertFalse($handler->handleError(E_WARNING, 'silenced warning'));
+		} finally {
+			error_reporting($reporting);
+		}
+	}
+
 	public function testHandleErrorDelegatesDeprecationsWithoutLogger(): void
 	{
 		$handler = new Handler($this->factory()->responseFactory());
@@ -170,9 +188,12 @@ final class ErrorHandlerTest extends TestCase
 	/** @return iterable<string, array{int, string}> */
 	public static function diagnostics(): iterable
 	{
-		yield 'deprecation' => [E_USER_DEPRECATED, 'Deprecated'];
-		yield 'notice' => [E_USER_NOTICE, 'Notice'];
-		yield 'warning' => [E_USER_WARNING, 'Warning'];
+		yield 'deprecation' => [E_DEPRECATED, 'Deprecated'];
+		yield 'user deprecation' => [E_USER_DEPRECATED, 'Deprecated'];
+		yield 'notice' => [E_NOTICE, 'Notice'];
+		yield 'user notice' => [E_USER_NOTICE, 'Notice'];
+		yield 'warning' => [E_WARNING, 'Warning'];
+		yield 'user warning' => [E_USER_WARNING, 'Warning'];
 		yield 'other' => [E_RECOVERABLE_ERROR, 'Error'];
 	}
 
@@ -230,6 +251,85 @@ final class ErrorHandlerTest extends TestCase
 		$this->assertSame('<h1>404 &lt;missing&gt;</h1>', (string) $response->getBody());
 	}
 
+	public function testFallbackEscapesQuotesInTitle(): void
+	{
+		$request = $this->request();
+		$handler = new Handler($this->factory()->responseFactory());
+		$response = $handler->response(new HttpNotFound($request, message: 'say "hi" & \'bye\''), $request);
+
+		$this->assertSame('<h1>404 say &quot;hi&quot; &amp; &#039;bye&#039;</h1>', (string) $response->getBody());
+	}
+
+	/** @return iterable<string, array{int, int}> */
+	public static function statusCodes(): iterable
+	{
+		yield 'lowest client error' => [400, 400];
+		yield 'highest server error' => [599, 599];
+		yield 'below error range' => [399, 500];
+		yield 'above error range' => [600, 500];
+	}
+
+	#[DataProvider('statusCodes')]
+	public function testFallbackOnlyUsesErrorStatusCodes(int $code, int $status): void
+	{
+		$request = $this->request();
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger(new RecordingLogger());
+		$response = $handler->response(new HttpBadRequest($request, code: $code), $request);
+
+		$this->assertSame($status, $response->getStatusCode());
+	}
+
+	public function testFirstMatchingRendererWins(): void
+	{
+		$logger = new RecordingLogger();
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger($logger);
+		$handler->renderer(new TestRenderer(), ErrorException::class)->log('notice');
+		$handler->renderer(new TestRenderer(), Exception::class)->log('info');
+		$handler->renderer(new TestRenderer(), Throwable::class)->log('error');
+
+		$response = $handler->response(new Exception('Boom'), $this->request());
+
+		$this->assertSame(Exception::class . ' rendered GET Boom', (string) $response->getBody());
+		$this->assertCount(1, $logger->records);
+		$this->assertSame('info', $logger->records[0]['level']);
+	}
+
+	public function testRendererEntryMatchesClassAndSubclasses(): void
+	{
+		$entry = new RendererEntry([RuntimeException::class], new TestRenderer());
+
+		$this->assertTrue($entry->matches(new RuntimeException()));
+		$this->assertTrue($entry->matches(new \UnexpectedValueException()));
+		$this->assertFalse($entry->matches(new Exception()));
+	}
+
+	public function testMethodNotAllowedCarriesTheAllowedMethods(): void
+	{
+		$renderer = new class implements Renderer {
+			public ?Throwable $exception = null;
+
+			public function render(
+				Throwable $exception,
+				ResponseFactory $factory,
+				Request $request,
+				bool $debug,
+			): Response {
+				$this->exception = $exception;
+
+				return $factory->createResponse(405);
+			}
+		};
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->renderer($renderer);
+
+		$handler->response(new MethodNotAllowedException(['get', 'head']), $this->request());
+
+		$this->assertInstanceOf(HttpMethodNotAllowed::class, $renderer->exception);
+		$this->assertSame(['allowed' => ['GET', 'HEAD']], $renderer->exception->payload());
+	}
+
 	public function testFallbackUsesServerErrorForGenericException(): void
 	{
 		$handler = new Handler($this->factory()->responseFactory());
@@ -261,6 +361,42 @@ final class ErrorHandlerTest extends TestCase
 
 			$this->assertTrue(Console::hasException());
 			Console::clearException();
+		});
+	}
+
+	public function testDevServerMarksServerExceptionsOfMatchedRenderers(): void
+	{
+		$this->withCliServer(function (): void {
+			$handler = new Handler($this->factory()->responseFactory());
+			$handler->renderer(new TestRenderer(), Exception::class);
+
+			$handler->response(new Exception('Boom'), $this->request());
+
+			$this->assertTrue(Console::hasException());
+		});
+	}
+
+	public function testDevServerMarksServerExceptionsOfTheDebugHandler(): void
+	{
+		$this->withCliServer(function (): void {
+			$handler = new Handler($this->factory()->responseFactory(), debug: true);
+			$handler->debugHandler(new TestDebugHandler());
+
+			$handler->response(new Exception('Boom'), $this->request());
+
+			$this->assertTrue(Console::hasException());
+		});
+	}
+
+	public function testDevServerMarksServerExceptionsOfTheFallback(): void
+	{
+		$this->withCliServer(function (): void {
+			$handler = new Handler($this->factory()->responseFactory());
+			$handler->logger(new RecordingLogger());
+
+			$handler->response(new Exception('Boom'), $this->request());
+
+			$this->assertTrue(Console::hasException());
 		});
 	}
 
@@ -359,6 +495,30 @@ final class ErrorHandlerTest extends TestCase
 		$handler->response(new HttpNotFound($request), $request);
 
 		$this->assertSame([], $logger->records);
+	}
+
+	public function testLoggedServerErrorsStayOutOfTheErrorLog(): void
+	{
+		$handler = new Handler($this->factory()->responseFactory());
+		$handler->logger(new RecordingLogger());
+		$request = $this->request();
+
+		$log = $this->captureErrorLog(static fn() => $handler->response(new Exception('Boom'), $request));
+
+		$this->assertSame('', $log);
+	}
+
+	public function testLoggedDiagnosticsAreNotReportedByPhpAgain(): void
+	{
+		$handler = new Handler($this->factory()->responseFactory(), exceptionLevels: 0);
+		$handler->logger(new RecordingLogger());
+		$reporting = error_reporting(E_ALL);
+
+		try {
+			$this->assertTrue($handler->handleError(E_USER_WARNING, 'logged warning'));
+		} finally {
+			error_reporting($reporting);
+		}
 	}
 
 	public function testServerErrorsGoToTheErrorLogWithoutALogger(): void

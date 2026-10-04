@@ -86,7 +86,7 @@ final class RequestFileTest extends TestCase
 
 	public function testAccessSingleFileWhenMulitpleAreAvailable(): void
 	{
-		$this->throws(RuntimeException::class, 'Multiple files');
+		$this->throws(RuntimeException::class, "Multiple files available at key ['myfile']");
 
 		$request = new Request($this->request(files: $this->getFiles()));
 		$request->file('myfile');

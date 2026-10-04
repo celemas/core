@@ -66,10 +66,64 @@ final class ResponseFileTest extends TestCase
 
 	public function testFileResponseNonexistentFileWithRuntimeError(): void
 	{
-		$this->throws(FileNotFoundException::class, 'File not found');
-
 		$file = self::FIXTURES . '/public/static/pixel.jpg';
+		$this->throws(FileNotFoundException::class, 'File not found: ' . $file);
+
 		Response::create($this->factory())->file($file);
+	}
+
+	public function testSendfileResponseNonexistentFile(): void
+	{
+		$file = self::FIXTURES . '/public/static/pixel.jpg';
+		$this->throws(FileNotFoundException::class, 'File not found: ' . $file);
+
+		Response::create($this->factory())->sendfile($file);
+	}
+
+	public function testSendfileDetectsNginxCaseInsensitively(): void
+	{
+		$_SERVER['SERVER_SOFTWARE'] = 'NGINX/1.27';
+
+		try {
+			$file = self::FIXTURES . '/public/image.webp';
+			$response = Response::create($this->factory())->sendfile($file);
+		} finally {
+			unset($_SERVER['SERVER_SOFTWARE']);
+		}
+
+		$this->assertSame($file, $response->getHeader('X-Accel-Redirect')[0]);
+	}
+
+	public function testFileHelpersRespondWithOkByDefault(): void
+	{
+		$file = self::FIXTURES . '/public/image.webp';
+		$_SERVER['SERVER_SOFTWARE'] = 'nginx';
+
+		try {
+			$sendfile = Response::create($this->factory())->sendfile($file);
+		} finally {
+			unset($_SERVER['SERVER_SOFTWARE']);
+		}
+
+		$this->assertSame(200, Response::create($this->factory())->file($file)->getStatusCode());
+		$this->assertSame(200, Response::create($this->factory())->download($file)->getStatusCode());
+		$this->assertSame(200, $sendfile->getStatusCode());
+	}
+
+	public function testFileContentTypeComesFromTheExtension(): void
+	{
+		$cases = [
+			'scalar.json' => 'application/json',
+			'plain.html' => 'text/html',
+			'upper.CSS' => 'text/css',
+		];
+
+		foreach ($cases as $filename => $expectedContentType) {
+			$file = self::FIXTURES . '/public/static/' . $filename;
+			$response = Response::create($this->factory())->file($file);
+
+			$this->assertSame($expectedContentType, $response->getHeader('Content-Type')[0], $filename);
+		}
 	}
 
 	public function testFileResponseContentTypesForTextFiles(): void

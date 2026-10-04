@@ -18,6 +18,14 @@ final class RequestHelpersTest extends TestCase
 		$this->assertSame(false, $request->isMethod('POST'));
 	}
 
+	public function testMethodsAreComparedInUppercase(): void
+	{
+		$request = new Request($this->request(['REQUEST_METHOD' => 'post']));
+
+		$this->assertSame('POST', $request->method());
+		$this->assertSame(true, $request->isMethod('post'));
+	}
+
 	public function testUriHelpers(): void
 	{
 		$request = new Request($this->request(server: ['REQUEST_URI' => '/albums']));

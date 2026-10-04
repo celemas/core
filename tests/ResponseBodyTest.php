@@ -31,6 +31,14 @@ final class ResponseBodyTest extends TestCase
 		$this->assertSame('Chuck text string', (string) $response->getBody());
 	}
 
+	public function testSetBodyWithStringReplacesThePreviousBody(): void
+	{
+		$response = new Response($this->response());
+		$response->body('abc');
+		$response->body('xyz');
+		$this->assertSame('xyz', (string) $response->getBody());
+	}
+
 	public function testSetBodyWithStringUsingFactory(): void
 	{
 		$response = new Response($this->response(), $this->factory()->streamFactory());

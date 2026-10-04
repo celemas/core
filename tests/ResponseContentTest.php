@@ -106,6 +106,23 @@ final class ResponseContentTest extends TestCase
 		$this->assertSame('application/json', $response->getHeader('Content-Type')[0]);
 	}
 
+	public function testJsonResponseKeepsSlashesUnescaped(): void
+	{
+		$response = Response::create($this->factory())->json(['path' => 'a/b']);
+
+		$this->assertSame('{"path":"a/b"}', (string) $response->getBody());
+	}
+
+	public function testContentHelpersRespondWithOkByDefault(): void
+	{
+		$response = Response::create($this->factory());
+
+		$this->assertSame(200, $response->withContentType('text/csv', 'a,b')->getStatusCode());
+		$this->assertSame(200, Response::create($this->factory())->html('x')->getStatusCode());
+		$this->assertSame(200, Response::create($this->factory())->text('x')->getStatusCode());
+		$this->assertSame(200, Response::create($this->factory())->json([])->getStatusCode());
+	}
+
 	public function testJsonResponseTraversable(): void
 	{
 		$response = Response::create($this->factory())

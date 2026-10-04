@@ -11,13 +11,17 @@ use Celema\Core\App;
 use Celema\Core\Error\Handler;
 use Celema\Core\Exception\HttpNotFound;
 use Celema\Core\Factory\Factory;
+use Celema\Core\Factory\Nyholm;
 use Celema\Core\Response;
 use Celema\Core\Tests\Fixtures\Counter;
 use Celema\Core\Tests\Fixtures\FailingLogger;
 use Celema\Core\Tests\Fixtures\RecordingEmitter;
 use Celema\Core\Tests\Fixtures\RecordingLogger;
+use Celema\Router\Router;
+use Celema\Server\Console;
 use Closure;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -133,8 +137,76 @@ final class AppLifecycleTest extends TestCase
 			ini_set('display_errors', (string) $previous);
 		}
 
+		$this->assertStringStartsWith(
+			"500 Internal Server Error\n\nRuntimeException: shown in development",
+			$emitter->bodies()[0],
+		);
+	}
+
+	public function testFailureShowsTheExceptionWhilePhpDisplaysErrorsOnStdout(): void
+	{
+		$app = App::create();
+		$app->logger(new RecordingLogger());
+		$app->emitter($emitter = new RecordingEmitter());
+		$app->get('/', static fn() => throw new RuntimeException('shown on stdout'));
+		// @mago-expect lint:no-ini-set
+		$previous = ini_set('display_errors', 'STDOUT');
+
+		try {
+			$app->run($this->request());
+		} finally {
+			// @mago-expect lint:no-ini-set
+			ini_set('display_errors', (string) $previous);
+		}
+
+		$this->assertStringContainsString('RuntimeException: shown on stdout', $emitter->bodies()[0]);
+	}
+
+	public function testFailureToCreateTheRequestIsAnsweredWithMinimal500(): void
+	{
+		$factory = new class extends Nyholm {
+			public function serverRequest(): ServerRequestInterface
+			{
+				throw new RuntimeException('no request');
+			}
+		};
+		$app = new App($factory, new Router(), new Container());
+		$app->logger($logger = new RecordingLogger());
+		$app->emitter($emitter = new RecordingEmitter());
+
+		$result = $app->run();
+
+		$this->assertSame(false, $result);
+		$this->assertSame([false], $emitter->withoutBody);
 		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[0]);
-		$this->assertStringContainsString('RuntimeException: shown in development', $emitter->bodies()[0]);
+		$this->assertSame('no request', $logger->records[0]['context']['exception']->getMessage());
+	}
+
+	public function testDevServerShowsUnhandledExceptionsWithTrace(): void
+	{
+		$app = App::create();
+		$app->logger(new RecordingLogger());
+		$app->emitter(new RecordingEmitter());
+		$app->get('/', static fn() => throw new RuntimeException('unhandled in dev'));
+		$previous = $_SERVER['CELEMA_CLI_SERVER'] ?? null;
+		$_SERVER['CELEMA_CLI_SERVER'] = '1';
+
+		try {
+			$app->run($this->request());
+			$this->assertTrue(Console::hasException());
+			$log = $this->captureErrorLog(Console::flushException(...));
+		} finally {
+			Console::clearException();
+
+			if ($previous === null) {
+				unset($_SERVER['CELEMA_CLI_SERVER']);
+			} else {
+				$_SERVER['CELEMA_CLI_SERVER'] = $previous;
+			}
+		}
+
+		$this->assertStringContainsString('RuntimeException: unhandled in dev', $log);
+		$this->assertStringContainsString('Trace:', $log);
 	}
 
 	public function testFailureHidesTheExceptionWhenPhpDoesNotDisplayErrors(): void
@@ -274,6 +346,7 @@ final class AppLifecycleTest extends TestCase
 		$log = $this->captureErrorLog(static fn() => $app->run($request));
 
 		$this->assertStringContainsString('scoped logger', $log);
+		$this->assertMatchesRegularExpression('/Logging failed: [\\\\\w]+Exception: /', $log);
 	}
 
 	public function testFailingLoggerDoesNotPreventThe500Response(): void

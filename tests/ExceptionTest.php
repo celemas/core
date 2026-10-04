@@ -165,6 +165,24 @@ final class ExceptionTest extends TestCase
 		$this->assertStringContainsString('#0', $trace);
 	}
 
+	public function testGetPrettyTraceListsFramesInOrder(): void
+	{
+		$line = __LINE__ + 1;
+		$exception = (static fn(): HttpNotFound => new HttpNotFound())();
+		$trace = $exception->getPrettyTrace();
+
+		$this->assertStringStartsWith(
+			'<p class="trace"><span class="trace-number">#0</span><span class="trace-file">'
+				. __FILE__
+				. ' <span class="trace-line-number">('
+				. $line
+				. ')</span></span><code class="trace-code">',
+			$trace,
+		);
+		$this->assertStringContainsString('<span class="trace-number">#1</span>', $trace);
+		$this->assertStringContainsString(self::class . '->' . __FUNCTION__ . '()</code></p>' . "\n", $trace);
+	}
+
 	public function testFormatTraceArgWithVariousTypes(): void
 	{
 		$exception = new HttpNotFound();
