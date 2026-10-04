@@ -128,18 +128,16 @@ final class FrankenPhpWorkerTest extends TestCase
 	{
 		$file = (string) tempnam(sys_get_temp_dir(), 'celema-stat');
 		file_put_contents($file, 'a');
+		$this->assertSame(1, filesize($file));
+		$handle = fopen($file, 'a');
+		fwrite($handle, 'b');
+		fclose($handle);
 		$app = App::create();
 		$app->emitter($emitter = new RecordingEmitter());
-		$app->get('/', static function (Factory $factory) use ($file): Response {
-			$size = filesize($file);
-			// PHP clears its stat cache for its own writes, so the change
-			// has to come from another process, like a deployment would.
-			exec('printf b >> ' . escapeshellarg($file));
-
-			return Response::create($factory)->text((string) $size);
-		});
+		$app->get('/', static fn(Factory $factory): Response => Response::create($factory)->text(
+			(string) filesize($file),
+		));
 		$_SERVER['FRANKENPHP_WORKER'] = '1';
-		WorkerState::request();
 		WorkerState::request();
 
 		try {
@@ -148,7 +146,7 @@ final class FrankenPhpWorkerTest extends TestCase
 			unlink($file);
 		}
 
-		$this->assertSame(['1', '2'], $emitter->bodies());
+		$this->assertSame(['2'], $emitter->bodies());
 	}
 
 	public function testWorkerKeepsRunningRequestsWhenClientsDisconnect(): void
