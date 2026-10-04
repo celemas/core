@@ -6,6 +6,7 @@
 
 - Log messages name the request and what went wrong, with PSR-3 placeholders: `Server error {status} for {method} {path}` and `Client error {status} for {method} {path}` replace `Unmatched exception` and `Matched exception`, `PHP {type}: {diagnostic} in {file} on line {line}` replaces `PHP diagnostic`, and `Unhandled exception` and `Request teardown failed` end in `for {method} {path}`. The context carries the placeholder values; the path leaves out the query string.
 - `Error\Handler::log()` and `Error\Handler::logUnmatched()` take the request as their last argument; `App::report()` and `App::finish()` take the request, or `null` when creating it failed.
+- `Response::body()` with a string and no stream factory throws when the current body is not empty, instead of writing over it from the start and leaving the tail of a longer previous body behind. Pass a stream factory to replace bodies.
 
 ### Fixed
 

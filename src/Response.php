@@ -131,14 +131,19 @@ class Response implements ResponseWrapper
 
 		$stream = $this->psrResponse->getBody();
 
-		if ($stream->isWritable()) {
-			$stream->rewind();
-			$stream->write($body);
-
-			return $this;
+		if (!$stream->isWritable()) {
+			throw new RuntimeException('The response body is not writable!');
 		}
 
-		throw new RuntimeException('The response body is not writable!');
+		// PSR-7 streams cannot be truncated, so writing over existing content
+		// would leave its tail behind.
+		if ($stream->getSize() !== 0) {
+			throw new RuntimeException('Replacing a non-empty response body requires a stream factory');
+		}
+
+		$stream->write($body);
+
+		return $this;
 	}
 
 	protected function setStreamBody(PsrStream $body): static

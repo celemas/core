@@ -33,10 +33,19 @@ final class ResponseBodyTest extends TestCase
 
 	public function testSetBodyWithStringReplacesThePreviousBody(): void
 	{
+		$response = new Response($this->response(), $this->factory()->streamFactory());
+		$response->body('hello world');
+		$response->body('hi');
+		$this->assertSame('hi', (string) $response->getBody());
+	}
+
+	public function testFailReplacingNonEmptyBodyWithoutFactory(): void
+	{
+		$this->throws(RuntimeException::class, 'Replacing a non-empty response body requires a stream factory');
+
 		$response = new Response($this->response());
-		$response->body('abc');
-		$response->body('xyz');
-		$this->assertSame('xyz', (string) $response->getBody());
+		$response->body('hello world');
+		$response->body('hi');
 	}
 
 	public function testSetBodyWithStringUsingFactory(): void
