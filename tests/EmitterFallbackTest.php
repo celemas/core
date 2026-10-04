@@ -34,6 +34,15 @@ final class EmitterFallbackTest extends TestCase
 		$this->assertSame([500], SapiState::$statusCodes);
 	}
 
+	public function testResponseIsEmittedWithBodyByDefault(): void
+	{
+		$emitter = new RecordingEmitter();
+
+		Fallback::emit($emitter, $this->factory()->response(500), ob_get_level());
+
+		$this->assertSame([false], $emitter->withoutBody);
+	}
+
 	public function testBufferThatCannotBeRemovedIsCleanedAndGetsTheResponse(): void
 	{
 		$level = ob_get_level();
