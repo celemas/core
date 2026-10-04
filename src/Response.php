@@ -126,9 +126,7 @@ class Response implements ResponseWrapper
 	protected function setStringBody(string $body): static
 	{
 		if ($this->streamFactory) {
-			$this->psrResponse = $this->psrResponse->withBody($this->streamFactory->createStream($body));
-
-			return $this;
+			return $this->setStreamBody($this->streamFactory->createStream($body));
 		}
 
 		$stream = $this->psrResponse->getBody();

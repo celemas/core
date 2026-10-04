@@ -103,10 +103,7 @@ class Request implements RequestWrapper
 		$headers = $this->psrRequest->getHeaders();
 
 		if ($firstOnly) {
-			return array_combine(
-				array_keys($headers),
-				array_map(static fn(array $val): string => $val[0], $headers),
-			);
+			return array_map(static fn(array $val): string => $val[0], $headers);
 		}
 
 		return $headers;
@@ -192,12 +189,7 @@ class Request implements RequestWrapper
 	): mixed {
 		$body = (string) $this->psrRequest->getBody();
 
-		return json_decode(
-			$body,
-			true,
-			512, // PHP default value
-			$flags,
-		);
+		return json_decode($body, true, flags: $flags);
 	}
 
 	/**
@@ -217,10 +209,6 @@ class Request implements RequestWrapper
 	{
 		$files = $this->psrRequest->getUploadedFiles();
 		$keys = $this->validateKeys($keys);
-
-		if (count($keys) === 0) {
-			return $files;
-		}
 
 		// Walk into the uploaded files structure
 		foreach ($keys as $key) {

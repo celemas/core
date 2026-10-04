@@ -51,7 +51,8 @@ final class Sapi implements Emitter
 			throw new RuntimeException("Headers already sent in {$file} on line {$line}");
 		}
 
-		if (ob_get_level() > 0 && ob_get_length() > 0) {
+		// ob_get_length() is false without an active buffer.
+		if (ob_get_length() > 0) {
 			throw new RuntimeException('Output already present in the output buffer');
 		}
 	}

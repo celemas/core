@@ -27,8 +27,8 @@ final class FrankenPhpWorker
 	 */
 	public function __construct(
 		private readonly Closure $handleRequest,
-		public readonly int $maxRequests = 0,
-		public readonly int $maxMemory = 0,
+		public readonly int $maxRequests,
+		public readonly int $maxMemory,
 	) {}
 
 	/**
