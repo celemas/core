@@ -9,10 +9,124 @@
 		html: '.infection/infection.html',
 		summary: '.infection/summary.log',
 	},
+	// Ratchet: raise these with the reached score, never lower them.
+	minMsi: 100,
+	minCoveredMsi: 100,
 	// CI mutates only the lines changed by a push; pushes without source
 	// changes produce no mutants and must not fail the threshold.
 	ignoreMsiWithNoMutations: true,
+	// Ignores below cover equivalent mutants: they change no observable behavior.
+	// They are scoped to a method, or to a source line by regex where the
+	// method also has killed mutants of the same kind (`ignoreSourceCodeByRegex`
+	// matches removed diff lines across the whole codebase).
 	mutators: {
 		'@default': true,
+
+		// App, Response and the error Handler are extensible API classes:
+		// their protected methods are extension points, and
+		// initializeContainer() is part of the public API.
+		ProtectedVisibility: {
+			ignore: ['Celema\\Core\\App', 'Celema\\Core\\Error\\Handler', 'Celema\\Core\\Response'],
+		},
+		PublicVisibility: {
+			ignore: ['Celema\\Core\\App::initializeContainer'],
+		},
+		FalseValue: {
+			// The only caller passes the argument; the default stays for subclasses.
+			ignore: ['Celema\\Core\\App::emitFailure'],
+			// run() declares Response|false, so `true` throws a TypeError that
+			// run() answers with the same `false`.
+			ignoreSourceCodeByRegex: ['return \\$this->emitter->emit\\(.*\\) \\? \\$response : false;'],
+		},
+
+		// Casts of values that concatenation, echo or strtr() already turn
+		// into strings, and of ini_get('memory_limit'), which is always set.
+		CastString: {
+			ignore: [
+				'Celema\\Core\\App::report',
+				'Celema\\Core\\App::emitFailure',
+				'Celema\\Core\\Emitter\\Sapi::emitBody',
+				'Celema\\Core\\Error\\Log::write',
+				'Celema\\Core\\Error\\Log::attempt',
+				'Celema\\Core\\Error\\Log::replacements',
+				'Celema\\Core\\Exception\\HttpError::title',
+				'Celema\\Core\\Runtime\\FrankenPhpWorker::defaultMaxMemory',
+			],
+		},
+
+		// Defaults and fallbacks that are never used: PHP always passes the
+		// line to error handlers, an active output buffer always reports its
+		// flags, and memory_limit is never empty.
+		DecrementInteger: {
+			ignore: ['Celema\\Core\\Emitter\\Sapi::__construct'],
+			ignoreSourceCodeByRegex: [
+				'int \\$line = 0,',
+				"\\$bytes = \\$limit === '' \\? 0 : ini_parse_quantity\\(\\$limit\\);",
+				"\\$flags = \\(int\\) \\(ob_get_status\\(\\)\\['flags'\\] \\?\\? 0\\);",
+			],
+		},
+		IncrementInteger: {
+			ignore: ['Celema\\Core\\Emitter\\Sapi::__construct'],
+			ignoreSourceCodeByRegex: [
+				'int \\$line = 0,',
+				"\\$bytes = \\$limit === '' \\? 0 : ini_parse_quantity\\(\\$limit\\);",
+				"\\$flags = \\(int\\) \\(ob_get_status\\(\\)\\['flags'\\] \\?\\? 0\\);",
+			],
+		},
+		CastInt: {
+			ignoreSourceCodeByRegex: ["\\$flags = \\(int\\) \\(ob_get_status\\(\\)\\['flags'\\] \\?\\? 0\\);"],
+		},
+		// intdiv() of a non-positive limit already yields 0 or a value the
+		// retirement check treats as no limit.
+		GreaterThan: {
+			ignore: ['Celema\\Core\\Runtime\\FrankenPhpWorker::defaultMaxMemory'],
+		},
+
+		// Side effects without observable results in tests: flushing output,
+		// collecting garbage, and clearing PHP's single-entry stat cache,
+		// which framework file access between requests replaces anyway.
+		// Ending the buffers in cleanup loops only makes the loops endless.
+		FunctionCallRemoval: {
+			ignoreSourceCodeByRegex: [
+				'flush\\(\\);',
+				'gc_collect_cycles\\(\\);',
+				'clearstatcache\\(\\);',
+				'ob_end_clean\\(\\);',
+			],
+		},
+		// Using exactly the memory limit is not reproducible in a test. The
+		// chunked range loop only changes the size of the chunks it reads;
+		// its mutations either read the same bytes in one go or loop forever.
+		GreaterThanOrEqualTo: {
+			ignoreSourceCodeByRegex: [
+				'&& memory_get_usage\\(true\\) >= \\$this->maxMemory',
+				'while \\(\\$remaining >= \\$this->maxBufferLength && !\\$body->eof\\(\\)\\) \\{',
+			],
+		},
+		LogicalNot: {
+			ignoreSourceCodeByRegex: ['while \\(\\$remaining >= \\$this->maxBufferLength && !\\$body->eof\\(\\)\\) \\{'],
+		},
+		LogicalAndAllSubExprNegation: {
+			ignoreSourceCodeByRegex: ['while \\(\\$remaining >= \\$this->maxBufferLength && !\\$body->eof\\(\\)\\) \\{'],
+		},
+		LogicalAndNegation: {
+			ignoreSourceCodeByRegex: ['while \\(\\$remaining >= \\$this->maxBufferLength && !\\$body->eof\\(\\)\\) \\{'],
+		},
+		While_: {
+			ignoreSourceCodeByRegex: ['while \\(\\$remaining >= \\$this->maxBufferLength && !\\$body->eof\\(\\)\\) \\{'],
+		},
+		ReturnRemoval: {
+			// A non-readable body is at its end after getContents(), so the
+			// reading loop below does nothing.
+			ignore: ['Celema\\Core\\Emitter\\Sapi::emitBodyRange'],
+			// The fallback path writes the same body into the new stream.
+			ignoreSourceCodeByRegex: ['return \\$this->setStreamBody\\(\\$this->streamFactory->createStream\\(\\$body\\)\\);'],
+		},
+
+		// Assertions only differ for parsed bodies that are neither null nor
+		// arrays, which they exist to reject.
+		LogicalOrAllSubExprNegation: {
+			ignoreSourceCodeByRegex: ["assert\\(\\$body === null \\|\\| is_array\\(\\$body\\), 'Parsed form body must be null or an array'\\);"],
+		},
 	},
 }
