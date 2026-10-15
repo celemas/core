@@ -2,6 +2,10 @@
 
 ## [Unreleased](https://codefloe.com/celema/core/compare/0.8.0...HEAD)
 
+### Breaking Changes
+
+- Require `celema/container` 0.7 and `celema/router` 0.6, which require `celema/wire` 0.9. A container entry whose `args()` target a class without a constructor throws a `NotFoundException` instead of silently dropping the arguments.
+
 ### Fixed
 
 - `Request::field()` without a default throws an `OutOfBoundsException` when the request has no parsed body, as it does when the field is missing from one. Before, it failed an assertion, or with assertions disabled, threw a `TypeError`.
