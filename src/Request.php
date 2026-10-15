@@ -314,7 +314,7 @@ class Request implements RequestWrapper
 	private function formatKeys(array $keys): string
 	{
 		return implode('', array_map(
-			static fn($key) => "['" . $key . "']",
+			static fn(string $key): string => "['" . $key . "']",
 			$keys,
 		));
 	}
