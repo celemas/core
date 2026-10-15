@@ -13,11 +13,13 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 use Psr\Http\Message\ResponseInterface as PsrResponse;
 use Psr\Http\Message\ServerRequestInterface as PsrServerRequest;
+use Throwable;
 
 class TestCase extends BaseTestCase
 {
 	public string $root = __DIR__ . '/Fixtures';
 
+	/** @param class-string<Throwable> $exception */
 	public function throws(string $exception, ?string $message = null): void
 	{
 		$this->expectException($exception);

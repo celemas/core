@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Celema\Core\Tests\Fixtures;
 
+use PHPUnit\Framework\Assert;
 use Psr\Log\AbstractLogger;
 use Stringable;
+use Throwable;
 
 final class RecordingLogger extends AbstractLogger
 {
@@ -15,6 +17,14 @@ final class RecordingLogger extends AbstractLogger
 	public function log(mixed $level, string|Stringable $message, array $context = []): void
 	{
 		$this->records[] = ['level' => $level, 'message' => (string) $message, 'context' => $context];
+	}
+
+	public function exception(int $record): Throwable
+	{
+		$exception = $this->records[$record]['context']['exception'] ?? null;
+		Assert::assertInstanceOf(Throwable::class, $exception);
+
+		return $exception;
 	}
 
 	/** @return list<string> */

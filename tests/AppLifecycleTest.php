@@ -114,7 +114,7 @@ final class AppLifecycleTest extends TestCase
 		$this->assertSame(500, $emitter->responses[0]->getStatusCode());
 		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[0]);
 		$this->assertSame(['Unhandled exception for {method} {path}'], $logger->messages());
-		$this->assertSame('view failed', $logger->records[0]['context']['exception']->getMessage());
+		$this->assertSame('view failed', $logger->exception(0)->getMessage());
 		$this->assertSame('GET', $logger->records[0]['context']['method']);
 		$this->assertSame('/', $logger->records[0]['context']['path']);
 		$this->assertSame(true, $tornDown);
@@ -179,7 +179,7 @@ final class AppLifecycleTest extends TestCase
 		$this->assertSame(false, $result);
 		$this->assertSame([false], $emitter->withoutBody);
 		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[0]);
-		$this->assertSame('no request', $logger->records[0]['context']['exception']->getMessage());
+		$this->assertSame('no request', $logger->exception(0)->getMessage());
 	}
 
 	public function testDevServerShowsUnhandledExceptionsWithTrace(): void
@@ -259,7 +259,7 @@ final class AppLifecycleTest extends TestCase
 		$this->assertStringStartsWith('500 Internal Server Error', $emitter->bodies()[0]);
 		$this->assertSame(
 			'Output already present in the output buffer',
-			$logger->records[0]['context']['exception']->getMessage(),
+			$logger->exception(0)->getMessage(),
 		);
 		$this->assertSame(false, $app->reusable());
 	}
@@ -315,8 +315,8 @@ final class AppLifecycleTest extends TestCase
 			['Request teardown failed for {method} {path}', 'Request teardown failed for {method} {path}'],
 			$logger->messages(),
 		);
-		$this->assertSame('reset failed', $logger->records[0]['context']['exception']->getMessage());
-		$this->assertSame('hook failed', $logger->records[1]['context']['exception']->getMessage());
+		$this->assertSame('reset failed', $logger->exception(0)->getMessage());
+		$this->assertSame('hook failed', $logger->exception(1)->getMessage());
 		$this->assertSame(false, $app->reusable());
 	}
 

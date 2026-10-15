@@ -58,7 +58,7 @@ final class AppTest extends TestCase
 		$container->add('external', new stdClass());
 		$app = App::create($container);
 
-		$this->assertInstanceof(stdClass::class, $app->container()->get('external'));
+		$this->assertInstanceOf(stdClass::class, $app->container()->get('external'));
 	}
 
 	public function testMiddlewareHelper(): void
@@ -162,8 +162,8 @@ final class AppTest extends TestCase
 		$app = $this->app();
 		$container = $app->container();
 
-		$this->assertInstanceof(Router::class, $container->get(Router::class));
-		$this->assertInstanceof(Factory::class, $container->get(Factory::class));
+		$this->assertInstanceOf(Router::class, $container->get(Router::class));
+		$this->assertInstanceOf(Factory::class, $container->get(Factory::class));
 	}
 
 	public function testContainerResolvesTheAppsRouterAndFactory(): void
