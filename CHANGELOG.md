@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased](https://codefloe.com/celema/core/compare/0.8.0...HEAD)
+## [Unreleased](https://codefloe.com/celema/core/compare/0.9.0...HEAD)
+
+No notable changes since the last release.
+
+## [0.9.0](https://codefloe.com/celema/core/src/tag/0.9.0) (2026-10-15)
 
 ### Breaking Changes
 
@@ -9,12 +13,12 @@
 ### Fixed
 
 - `Request::field()` without a default throws an `OutOfBoundsException` when the request has no parsed body, as it does when the field is missing from one. Before, it failed an assertion, or with assertions disabled, threw a `TypeError`.
-- `Response::file()` and `Response::download()` throw a `RuntimeException` without a stream factory, like writing a resource body does. Before, they failed an assertion, or with assertions disabled, threw an `Error`.
-- `Request::file()` and `Request::files()` throw a `RuntimeException` for keys that mix strings and arrays, such as `file('docs', ['cv'])`. Before, they threw a `TypeError`.
 - `Request::form()` and `Request::field()` throw a `RuntimeException` when the parsed body is an object, which PSR-7 allows, for example after a middleware decoded a JSON body. Before, they failed an assertion, or with assertions disabled, threw a `TypeError`.
-- `Request::origin()` keeps an authority of `0`, as in `http://0/`. Before, it returned `http:`.
-- `Response::file()` opens the file before detecting its type, so an unreadable file fails with the stream factory's exception instead of `finfo` warnings first, which the error handler may turn into exceptions. When detection fails, the content type falls back to `application/octet-stream` and `Content-Transfer-Encoding` is left out. Before, `false` was passed as the header value.
+- `Request::file()` and `Request::files()` throw a `RuntimeException` for keys that mix strings and arrays, such as `file('docs', ['cv'])`. Before, they threw a `TypeError`.
 - `Request::headers(true)` gives an empty string for a header without values, which some PSR-7 implementations allow. Before, it threw a `TypeError`.
+- `Request::origin()` keeps an authority of `0`, as in `http://0/`. Before, it returned `http:`.
+- `Response::file()` and `Response::download()` throw a `RuntimeException` without a stream factory, like writing a resource body does. Before, they failed an assertion, or with assertions disabled, threw an `Error`.
+- `Response::file()` opens the file before detecting its type, so an unreadable file fails with the stream factory's exception instead of `finfo` warnings first, which the error handler may turn into exceptions. When detection fails, the content type falls back to `application/octet-stream` and `Content-Transfer-Encoding` is left out. Before, `false` was passed as the header value.
 
 ### Changed
 
