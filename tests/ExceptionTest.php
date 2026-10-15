@@ -183,6 +183,13 @@ final class ExceptionTest extends TestCase
 		$this->assertStringContainsString(self::class . '->' . __FUNCTION__ . '()</code></p>' . "\n", $trace);
 	}
 
+	public function testGetPrettyTraceFormatsArguments(): void
+	{
+		$exception = (static fn(string $name, int $count): HttpNotFound => new HttpNotFound())('Chuck', 42);
+
+		$this->assertStringContainsString("('Chuck', 42)</code>", $exception->getPrettyTrace());
+	}
+
 	public function testFormatTraceArgWithVariousTypes(): void
 	{
 		$exception = new HttpNotFound();

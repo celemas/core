@@ -7,6 +7,9 @@ namespace Celema\Core\Tests;
 use Celema\Core\Exception\RuntimeException;
 use Celema\Core\Exception\ValueError;
 use Celema\Core\Factory\Nyholm;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Nyholm\Psr7Server\ServerRequestCreator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Psr\Http\Message\RequestFactoryInterface;
@@ -66,42 +69,54 @@ final class FactoryNyholmTest extends TestCase
 		$factory->streamFromResource('wrong');
 	}
 
+	/** @return iterable<string, array{class-string}> */
+	public static function missingPackageProvider(): iterable
+	{
+		yield 'nyholm/psr7' => [Psr17Factory::class];
+		yield 'nyholm/psr7-server' => [ServerRequestCreator::class];
+	}
+
+	/** @param class-string $missing */
 	#[RunInSeparateProcess]
 	#[PreserveGlobalState(false)]
-	public function testNyholmFailsWithoutInstalledPackages(): void
+	#[DataProvider('missingPackageProvider')]
+	public function testNyholmFailsWithoutInstalledPackages(string $missing): void
 	{
-		$autoloaders = spl_autoload_functions() ?: [];
+		$autoloaders = spl_autoload_functions();
 
 		foreach ($autoloaders as $autoload) {
 			spl_autoload_unregister($autoload);
 		}
 
-		$exceptionClass = null;
+		$hide = static function (string $class) use ($autoloaders, $missing): void {
+			if ($class === $missing) {
+				return;
+			}
+
+			foreach ($autoloaders as $autoload) {
+				$autoload($class);
+			}
+		};
+		spl_autoload_register($hide);
+
 		$message = null;
 
 		try {
-			$root = dirname(__DIR__);
-
-			require_once $root . '/src/Exception/CoreException.php';
-			require_once $root . '/src/Exception/RuntimeException.php';
-			require_once $root . '/src/Factory/Factory.php';
-			require_once $root . '/src/Factory/AbstractFactory.php';
-			require_once $root . '/src/Factory/Nyholm.php';
-
-			try {
-				new Nyholm();
-			} catch (RuntimeException $exception) {
-				$exceptionClass = $exception::class;
-				$message = $exception->getMessage();
-			}
+			new Nyholm();
+		} catch (RuntimeException $exception) {
+			$message = $exception->getMessage();
 		} finally {
+			spl_autoload_unregister($hide);
+
 			foreach ($autoloaders as $autoload) {
 				spl_autoload_register($autoload);
 			}
 		}
 
-		$this->assertSame(RuntimeException::class, $exceptionClass);
-		$this->assertStringContainsString('nyholm/psr7 and nyholm/psr7-server', (string) $message);
-		$this->assertStringContainsString('custom Factory implementation', (string) $message);
+		$this->assertSame(
+			'Install nyholm/psr7 and nyholm/psr7-server to use the default PSR-7 factory, '
+				. 'or pass a custom Factory implementation to the App constructor',
+			$message,
+		);
 	}
 }
