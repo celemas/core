@@ -18,7 +18,26 @@ final class ResponseFileTest extends TestCase
 		$response = Response::create($this->factory())->file($file);
 
 		$this->assertSame('image/webp', $response->getHeader('Content-Type')[0]);
+		$this->assertSame('binary', $response->getHeader('Content-Transfer-Encoding')[0]);
 		$this->assertSame((string) filesize($file), $response->getHeader('Content-Length')[0]);
+	}
+
+	public function testFileResponseUnreadableFile(): void
+	{
+		$file = tempnam(sys_get_temp_dir(), 'celema');
+		chmod($file, 0);
+
+		try {
+			if (is_readable($file)) {
+				$this->markTestSkipped('File permissions do not apply to this user');
+			}
+
+			$this->expectException(\RuntimeException::class);
+
+			Response::create($this->factory())->file($file);
+		} finally {
+			unlink($file);
+		}
 	}
 
 	public function testFileDownloadResponse(): void

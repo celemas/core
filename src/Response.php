@@ -250,6 +250,8 @@ class Response implements ResponseWrapper
 			throw new RuntimeException('No factory available to create stream from file!');
 		}
 
+		// Opened first, so an unreadable file fails here instead of in finfo.
+		$stream = $this->streamFactory->createStreamFromFile($file, 'rb');
 		$finfo = new finfo(FILEINFO_MIME_TYPE);
 		$contentType = match (strtolower(pathinfo($file, PATHINFO_EXTENSION))) {
 			'js' => 'text/javascript',
@@ -265,13 +267,15 @@ class Response implements ResponseWrapper
 
 		$finfo = new finfo(FILEINFO_MIME_ENCODING);
 		$encoding = $finfo->file($file);
-		$stream = $this->streamFactory->createStreamFromFile($file, 'rb');
 
 		$this->psrResponse = $this->psrResponse
 			->withStatus($code, $reasonPhrase)
-			->withAddedHeader('Content-Type', $contentType)
-			->withAddedHeader('Content-Transfer-Encoding', $encoding)
+			->withAddedHeader('Content-Type', $contentType === false ? 'application/octet-stream' : $contentType)
 			->withBody($stream);
+
+		if ($encoding !== false) {
+			$this->psrResponse = $this->psrResponse->withAddedHeader('Content-Transfer-Encoding', $encoding);
+		}
 
 		$size = $stream->getSize();
 

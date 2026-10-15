@@ -9,6 +9,7 @@
 - `Request::file()` and `Request::files()` throw a `RuntimeException` for keys that mix strings and arrays, such as `file('docs', ['cv'])`. Before, they threw a `TypeError`.
 - `Request::form()` and `Request::field()` throw a `RuntimeException` when the parsed body is an object, which PSR-7 allows, for example after a middleware decoded a JSON body. Before, they failed an assertion, or with assertions disabled, threw a `TypeError`.
 - `Request::origin()` keeps an authority of `0`, as in `http://0/`. Before, it returned `http:`.
+- `Response::file()` opens the file before detecting its type, so an unreadable file fails with the stream factory's exception instead of `finfo` warnings first, which the error handler may turn into exceptions. When detection fails, the content type falls back to `application/octet-stream` and `Content-Transfer-Encoding` is left out. Before, `false` was passed as the header value.
 
 ### Changed
 
