@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Celema\Core\Tests;
 
 use Celema\Core\Exception\OutOfBoundsException;
+use Celema\Core\Exception\RuntimeException;
 use Celema\Core\Request;
 
 final class RequestFormPostGetTest extends TestCase
@@ -109,6 +110,24 @@ final class RequestFormPostGetTest extends TestCase
 		$request = new Request($this->request());
 
 		$request->field('doesnotexist');
+	}
+
+	public function testFormRejectsObjectBodies(): void
+	{
+		$this->throws(RuntimeException::class, 'The parsed body is an object');
+
+		$request = new Request($this->request()->withParsedBody((object) ['chuck' => 'schuldiner']));
+
+		$request->form();
+	}
+
+	public function testFieldRejectsObjectBodies(): void
+	{
+		$this->throws(RuntimeException::class, 'The parsed body is an object');
+
+		$request = new Request($this->request()->withParsedBody((object) ['chuck' => 'schuldiner']));
+
+		$request->field('chuck', 'the default');
 	}
 
 	public function testForm(): void

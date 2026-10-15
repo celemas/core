@@ -122,11 +122,5 @@
 			// The fallback path writes the same body into the new stream.
 			ignoreSourceCodeByRegex: ['return \\$this->setStreamBody\\(\\$this->streamFactory->createStream\\(\\$body\\)\\);'],
 		},
-
-		// Assertions only differ for parsed bodies that are neither null nor
-		// arrays, which they exist to reject.
-		LogicalOrAllSubExprNegation: {
-			ignoreSourceCodeByRegex: ["assert\\(\\$body === null \\|\\| is_array\\(\\$body\\), 'Parsed form body must be null or an array'\\);"],
-		},
 	},
 }

@@ -7,6 +7,7 @@
 - `Request::field()` without a default throws an `OutOfBoundsException` when the request has no parsed body, as it does when the field is missing from one. Before, it failed an assertion, or with assertions disabled, threw a `TypeError`.
 - `Response::file()` and `Response::download()` throw a `RuntimeException` without a stream factory, like writing a resource body does. Before, they failed an assertion, or with assertions disabled, threw an `Error`.
 - `Request::file()` and `Request::files()` throw a `RuntimeException` for keys that mix strings and arrays, such as `file('docs', ['cv'])`. Before, they threw a `TypeError`.
+- `Request::form()` and `Request::field()` throw a `RuntimeException` when the parsed body is an object, which PSR-7 allows, for example after a middleware decoded a JSON body. Before, they failed an assertion, or with assertions disabled, threw a `TypeError`.
 
 ## [0.8.0](https://codefloe.com/celema/core/src/tag/0.8.0) (2026-10-06)
 

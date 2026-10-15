@@ -47,16 +47,12 @@ class Request implements RequestWrapper
 
 	public function form(): ?array
 	{
-		$body = $this->psrRequest->getParsedBody();
-		assert($body === null || is_array($body), 'Parsed form body must be null or an array');
-
-		return $body;
+		return $this->parsedBody();
 	}
 
 	public function field(string $key, mixed $default = null): mixed
 	{
-		$body = $this->psrRequest->getParsedBody();
-		assert($body === null || is_array($body), 'Parsed form body must be null or an array');
+		$body = $this->parsedBody();
 		$error = 'Form field not found';
 
 		return $this->returnOrFail($body, $key, $default, $error, func_num_args());
@@ -278,6 +274,17 @@ class Request implements RequestWrapper
 		}
 
 		throw new RuntimeException('Multiple files available at key ' . $this->formatKeys($keys));
+	}
+
+	private function parsedBody(): ?array
+	{
+		$body = $this->psrRequest->getParsedBody();
+
+		if (is_object($body)) {
+			throw new RuntimeException('The parsed body is an object, not form data');
+		}
+
+		return $body;
 	}
 
 	private function returnOrFail(
