@@ -105,7 +105,7 @@ class Request implements RequestWrapper
 		$headers = $this->psrRequest->getHeaders();
 
 		if ($firstOnly) {
-			return array_map(static fn(array $val): string => $val[0], $headers);
+			return array_map(static fn(array $val): string => $val[0] ?? '', $headers);
 		}
 
 		return $headers;

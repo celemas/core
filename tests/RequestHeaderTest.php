@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Celema\Core\Tests;
 
 use Celema\Core\Request;
+use Psr\Http\Message\ServerRequestInterface as PsrServerRequest;
 
 final class RequestHeaderTest extends TestCase
 {
@@ -49,6 +50,14 @@ final class RequestHeaderTest extends TestCase
 			'deflate, gzip;q=1.0, *;q=0.5',
 			$request->headers(firstOnly: true)['Accept-Encoding'],
 		);
+	}
+
+	public function testHeadersFirstEntryOfHeaderWithoutValues(): void
+	{
+		$psrRequest = $this->createStub(PsrServerRequest::class);
+		$psrRequest->method('getHeaders')->willReturn(['X-Empty' => []]);
+
+		$this->assertSame(['X-Empty' => ''], new Request($psrRequest)->headers(firstOnly: true));
 	}
 
 	public function testWritingHeaders(): void
