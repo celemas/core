@@ -6,6 +6,7 @@ namespace Celema\Core\Tests;
 
 use Celema\Core\Request;
 use Nyholm\Psr7\Stream;
+use Nyholm\Psr7\Uri;
 
 final class RequestHelpersTest extends TestCase
 {
@@ -42,6 +43,13 @@ final class RequestHelpersTest extends TestCase
 		$this->assertSame('www.example.com', $request->uri()->getHost());
 		$this->assertSame('http://www.example.com', $request->origin());
 		$this->assertSame('/albums?from=1988&to=1991', $request->target());
+	}
+
+	public function testOriginKeepsFalsyParts(): void
+	{
+		$request = new Request($this->request()->withUri(new Uri('http://0/albums')));
+
+		$this->assertSame('http://0', $request->origin());
 	}
 
 	public function testBody(): void

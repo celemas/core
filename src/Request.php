@@ -153,9 +153,9 @@ class Request implements RequestWrapper
 	{
 		$uri = $this->psrRequest->getUri();
 		$scheme = $uri->getScheme();
-		$origin = $scheme ? $scheme . ':' : '';
+		$origin = $scheme !== '' ? $scheme . ':' : '';
 		$authority = $uri->getAuthority();
-		$origin .= $authority ? '//' . $authority : '';
+		$origin .= $authority !== '' ? '//' . $authority : '';
 
 		return $origin;
 	}
