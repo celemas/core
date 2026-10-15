@@ -119,6 +119,30 @@ final class RequestFileTest extends TestCase
 		$request->files([], []);
 	}
 
+	public function testAccessFileMixingStringsAndArrays(): void
+	{
+		$this->throws(RuntimeException::class, 'Either provide');
+
+		$request = new Request($this->request());
+		$request->file('nested', ['myfile']);
+	}
+
+	public function testAccessFilesMixingStringsAndArrays(): void
+	{
+		$this->throws(RuntimeException::class, 'Either provide');
+
+		$request = new Request($this->request(files: $this->getFiles()));
+		$request->files('nested', ['myfile']);
+	}
+
+	public function testAccessFilesUsingNestedArrays(): void
+	{
+		$this->throws(RuntimeException::class, 'Either provide');
+
+		$request = new Request($this->request(files: $this->getFiles()));
+		$request->files([['nested']]);
+	}
+
 	public function testNestedFileInstanceNotAvailable(): void
 	{
 		$this->throws(OutOfBoundsException::class, "Invalid file key ['does-not-exist']['really']");

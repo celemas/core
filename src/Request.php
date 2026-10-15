@@ -314,15 +314,21 @@ class Request implements RequestWrapper
 	 */
 	private function validateKeys(array $keys): array
 	{
-		if (isset($keys[0]) && is_array($keys[0])) {
-			if (count($keys) > 1) {
-				throw new RuntimeException('Either provide a single array or plain string arguments');
-			}
+		if (count($keys) === 1 && is_array($keys[0])) {
 			$keys = $keys[0];
 		}
 
-		/** @var list<string> $keys */
-		return $keys;
+		$strings = [];
+
+		foreach ($keys as $key) {
+			if (is_array($key)) {
+				throw new RuntimeException('Either provide a single array or plain string arguments');
+			}
+
+			$strings[] = $key;
+		}
+
+		return $strings;
 	}
 
 	/** A copy for the changed request; subclasses keep their own state. */
