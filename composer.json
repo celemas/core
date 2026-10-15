@@ -27,7 +27,7 @@
 	},
 	"require-dev": {
 		"carthage-software/mago": "1.50.0",
-		"celema/server": "^0.2",
+		"celema/server": "^0.4",
 		"ernst/coverlyzer": "^0.3",
 		"infection/infection": "0.35.6",
 		"nyholm/psr7": "^1.5",

@@ -2,7 +2,9 @@
 
 ## [Unreleased](https://codefloe.com/celema/core/compare/0.9.0...HEAD)
 
-No notable changes since the last release.
+### Changed
+
+- The README's development-server section follows `celema/server` 0.4: watching is on by default, `--no-watch` turns it off, and FrankenPHP runs as `./app/run server frankenphp`.
 
 ## [0.9.0](https://codefloe.com/celema/core/src/tag/0.9.0) (2026-10-15)
 

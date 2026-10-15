@@ -144,10 +144,10 @@ The repository's example app exercises routing, autowiring, request and response
 
 ```bash
 ./app/run server
-./app/run frankenphp
+./app/run server frankenphp
 ```
 
-Add `--watch` to run BrowserSync and reload when the example or Core source changes. Both commands support host, port, request-log filtering, and BrowserSync-backed `--watch` mode.
+The server watches the example and Core source by default and restarts the workers after a change in [worker mode](#worker-mode) (`./app/run server frankenphp --worker`); `--no-watch` turns watching off. The [`celema/server` README](https://codefloe.com/celema/server) describes the other options, such as host, port, worker mode, and request-log filtering.
 
 ## PSR-7 implementation
 

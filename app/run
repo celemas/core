@@ -3,9 +3,8 @@
 
 declare(strict_types=1);
 
-use Celema\Console\Commands;
 use Celema\Console\Runner;
-use Celema\Server\FrankenPhp;
+use Celema\Server\FrankenInstall;
 use Celema\Server\Server;
 
 $root = dirname(__DIR__);
@@ -14,9 +13,9 @@ chdir($root);
 
 $docroot = __DIR__ . '/public';
 $watch = ['app/**/*.{php,css,js}', 'src/**/*.php'];
-$commands = new Commands([
+$runner = new Runner([
 	new Server($docroot, port: 1973, watch: $watch),
-	new FrankenPhp($docroot, port: 1973, watch: $watch),
+	new FrankenInstall(),
 ]);
 
-exit(new Runner($commands)->run());
+exit($runner->run());
