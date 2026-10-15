@@ -244,6 +244,10 @@ class Response implements ResponseWrapper
 	): static {
 		$this->validateFile($file);
 
+		if ($this->streamFactory === null) {
+			throw new RuntimeException('No factory available to create stream from file!');
+		}
+
 		$finfo = new finfo(FILEINFO_MIME_TYPE);
 		$contentType = match (strtolower(pathinfo($file, PATHINFO_EXTENSION))) {
 			'js' => 'text/javascript',
@@ -259,7 +263,6 @@ class Response implements ResponseWrapper
 
 		$finfo = new finfo(FILEINFO_MIME_ENCODING);
 		$encoding = $finfo->file($file);
-		assert(isset($this->streamFactory), 'Stream factory must be set before creating a file stream');
 		$stream = $this->streamFactory->createStreamFromFile($file, 'rb');
 
 		$this->psrResponse = $this->psrResponse

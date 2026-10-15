@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Celema\Core\Tests;
 
 use Celema\Core\Exception\FileNotFoundException;
+use Celema\Core\Exception\RuntimeException;
 use Celema\Core\Response;
 
 final class ResponseFileTest extends TestCase
@@ -70,6 +71,13 @@ final class ResponseFileTest extends TestCase
 		$this->throws(FileNotFoundException::class, 'File not found: ' . $file);
 
 		Response::create($this->factory())->file($file);
+	}
+
+	public function testFileResponseWithoutStreamFactory(): void
+	{
+		$this->throws(RuntimeException::class, 'No factory available to create stream from file');
+
+		new Response($this->response())->download(self::FIXTURES . '/public/image.webp');
 	}
 
 	public function testSendfileResponseNonexistentFile(): void
