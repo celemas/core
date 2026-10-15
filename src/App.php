@@ -110,6 +110,7 @@ class App implements RouteAdder, RequestHandler
 		$this->router->addStatic($prefix, $path, $name);
 	}
 
+	/** @return list<Middleware> */
 	public function getMiddleware(): array
 	{
 		return $this->dispatcher->getMiddleware();

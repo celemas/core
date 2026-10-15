@@ -32,6 +32,7 @@ class Request implements RequestWrapper
 		return $this->psrRequest;
 	}
 
+	/** @return array<array-key, mixed> */
 	public function params(): array
 	{
 		return $this->psrRequest->getQueryParams();
@@ -45,6 +46,7 @@ class Request implements RequestWrapper
 		return $this->returnOrFail($params, $key, $default, $error, func_num_args());
 	}
 
+	/** @return array<array-key, mixed>|null */
 	public function form(): ?array
 	{
 		return $this->parsedBody();
@@ -58,6 +60,7 @@ class Request implements RequestWrapper
 		return $this->returnOrFail($body, $key, $default, $error, func_num_args());
 	}
 
+	/** @return array<array-key, mixed> */
 	public function cookies(): array
 	{
 		return $this->psrRequest->getCookieParams();
@@ -71,6 +74,7 @@ class Request implements RequestWrapper
 		return $this->returnOrFail($params, $key, $default, $error, func_num_args());
 	}
 
+	/** @return array<array-key, mixed> */
 	public function serverParams(): array
 	{
 		return $this->psrRequest->getServerParams();
@@ -89,11 +93,13 @@ class Request implements RequestWrapper
 		return $this->psrRequest->getHeaderLine($name);
 	}
 
+	/** @return string[] */
 	public function headerArray(string $header): array
 	{
 		return $this->psrRequest->getHeader($header);
 	}
 
+	/** @return ($firstOnly is true ? array<array-key, string> : array<array-key, string[]>) */
 	public function headers(bool $firstOnly = false): array
 	{
 		$headers = $this->psrRequest->getHeaders();
@@ -125,6 +131,7 @@ class Request implements RequestWrapper
 		return $this->psrRequest->hasHeader($header);
 	}
 
+	/** @return array<array-key, mixed> */
 	public function attributes(): array
 	{
 		return $this->psrRequest->getAttributes();
@@ -189,15 +196,14 @@ class Request implements RequestWrapper
 	}
 
 	/**
-	 * Returns always a list of uploaded files, even if there is
-	 * only one file.
-	 *
-	 * Psalm does not support multi file uploads yet and complains
-	 * about type issues. We need to suppres some of these errors.
+	 * Returns the uploaded files at the given keys. A single file is
+	 * wrapped in a list; nested keys keep their structure.
 	 *
 	 * @no-named-arguments
 	 *
 	 * @param list<string>|string ...$keys
+	 *
+	 * @return array<array-key, mixed>
 	 *
 	 * @throws OutOfBoundsException RuntimeException
 	 */
@@ -233,9 +239,6 @@ class Request implements RequestWrapper
 	}
 
 	/**
-	 * Psalm does not support multi file uploads yet and complains
-	 * about type issues. We need to suppres some of the errors.
-	 *
 	 * @no-named-arguments
 	 *
 	 * @param list<non-empty-string>|string ...$keys
@@ -255,7 +258,7 @@ class Request implements RequestWrapper
 
 		foreach ($keys as $key) {
 			if (isset($files[$key])) {
-				/** @var array|PsrUploadedFile $files */
+				/** @var array<array-key, mixed>|PsrUploadedFile $files */
 				$files = $files[$key];
 				$i++;
 
@@ -276,6 +279,7 @@ class Request implements RequestWrapper
 		throw new RuntimeException('Multiple files available at key ' . $this->formatKeys($keys));
 	}
 
+	/** @return array<array-key, mixed>|null */
 	private function parsedBody(): ?array
 	{
 		$body = $this->psrRequest->getParsedBody();
@@ -287,6 +291,7 @@ class Request implements RequestWrapper
 		return $body;
 	}
 
+	/** @param array<array-key, mixed>|null $array */
 	private function returnOrFail(
 		?array $array,
 		string $key,

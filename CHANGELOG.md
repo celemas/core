@@ -10,6 +10,11 @@
 - `Request::form()` and `Request::field()` throw a `RuntimeException` when the parsed body is an object, which PSR-7 allows, for example after a middleware decoded a JSON body. Before, they failed an assertion, or with assertions disabled, threw a `TypeError`.
 - `Request::origin()` keeps an authority of `0`, as in `http://0/`. Before, it returned `http:`.
 
+### Changed
+
+- Methods that returned a bare `array` declare their value types for static analysis: header values are `string[]`, `Request::headers(true)` returns one string per header, `App::getMiddleware()` returns a list of middleware, and request data such as query, form, cookie, server, attribute, and uploaded-file arrays is `array<array-key, mixed>`.
+- The `Request::files()` description says that nested keys keep their structure; only a single file is wrapped in a list.
+
 ## [0.8.0](https://codefloe.com/celema/core/src/tag/0.8.0) (2026-10-06)
 
 ### Breaking Changes

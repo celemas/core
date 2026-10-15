@@ -89,11 +89,13 @@ class Response implements ResponseWrapper
 		return $this;
 	}
 
+	/** @return array<array-key, string[]> */
 	public function headers(): array
 	{
 		return $this->psrResponse->getHeaders();
 	}
 
+	/** @return string[] */
 	public function getHeader(string $name): array
 	{
 		return $this->psrResponse->getHeader($name);
