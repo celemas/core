@@ -152,17 +152,21 @@ class Handler implements Middleware
 		}
 
 		if ($this->debug) {
-			if ($this->debugHandler) {
+			$debugHandler = $this->debugHandler;
+
+			if ($debugHandler) {
 				$this->recordServerException($exception);
 
-				return $this->debugHandler->handle($exception, $this->responseFactory);
+				return $debugHandler->handle($exception, $this->responseFactory);
 			}
 
 			throw $exception;
 		}
 
-		if ($this->defaultRenderer) {
-			$logLevel = $this->defaultRenderer->logLevel();
+		$defaultRenderer = $this->defaultRenderer;
+
+		if ($defaultRenderer) {
+			$logLevel = $defaultRenderer->logLevel();
 
 			if ($logLevel !== null) {
 				$this->log($logLevel, $exception, $request);
@@ -172,7 +176,7 @@ class Handler implements Middleware
 
 			$this->recordServerException($exception);
 
-			return $this->defaultRenderer->renderer->render(
+			return $defaultRenderer->renderer->render(
 				$exception,
 				$this->responseFactory,
 				$request,
