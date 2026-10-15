@@ -287,14 +287,12 @@ class Request implements RequestWrapper
 		string $error,
 		int $numArgs,
 	): mixed {
-		if (($array === null || !array_key_exists($key, $array)) && $numArgs > 1) {
-			return $default;
+		if ($array !== null && array_key_exists($key, $array)) {
+			return $array[$key];
 		}
 
-		assert($array !== null, 'Input array must not be null when no default value is provided');
-
-		if (array_key_exists($key, $array)) {
-			return $array[$key];
+		if ($numArgs > 1) {
+			return $default;
 		}
 
 		throw new OutOfBoundsException("{$error}: '{$key}'");

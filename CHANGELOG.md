@@ -2,7 +2,9 @@
 
 ## [Unreleased](https://codefloe.com/celema/core/compare/0.8.0...HEAD)
 
-No notable changes since the last release.
+### Fixed
+
+- `Request::field()` without a default throws an `OutOfBoundsException` when the request has no parsed body, as it does when the field is missing from one. Before, it failed an assertion, or with assertions disabled, threw a `TypeError`.
 
 ## [0.8.0](https://codefloe.com/celema/core/src/tag/0.8.0) (2026-10-06)
 

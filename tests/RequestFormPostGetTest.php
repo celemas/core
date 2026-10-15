@@ -102,6 +102,15 @@ final class RequestFormPostGetTest extends TestCase
 		$request->field('doesnotexist');
 	}
 
+	public function testFieldFailingWithoutParsedBody(): void
+	{
+		$this->throws(OutOfBoundsException::class, "Form field not found: 'doesnotexist'");
+
+		$request = new Request($this->request());
+
+		$request->field('doesnotexist');
+	}
+
 	public function testForm(): void
 	{
 		$request = new Request($this->request(
