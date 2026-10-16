@@ -15,8 +15,9 @@ use Celema\Core\Error\Log;
 use Celema\Core\Factory\Factory;
 use Celema\Core\Factory\Nyholm;
 use Celema\Core\Runtime\FrankenPhpWorker;
-use Celema\Router\AddsBeforeAfter;
 use Celema\Router\AddsRoutes;
+use Celema\Router\After;
+use Celema\Router\Before;
 use Celema\Router\Dispatcher;
 use Celema\Router\Route;
 use Celema\Router\RouteAdder;
@@ -38,7 +39,6 @@ use Throwable;
 class App implements RouteAdder, RequestHandler
 {
 	use AddsRoutes;
-	use AddsBeforeAfter;
 
 	protected readonly Dispatcher $dispatcher;
 	protected ?ErrorHandler $errorHandler = null;
@@ -137,6 +137,20 @@ class App implements RouteAdder, RequestHandler
 	public function middleware(Middleware ...$middleware): void
 	{
 		$this->dispatcher->middleware(...$middleware);
+	}
+
+	public function before(Before $beforeHandler): static
+	{
+		$this->dispatcher->before($beforeHandler);
+
+		return $this;
+	}
+
+	public function after(After $afterHandler): static
+	{
+		$this->dispatcher->after($afterHandler);
+
+		return $this;
 	}
 
 	public function logger(Logger|callable $logger): void
@@ -276,8 +290,6 @@ class App implements RouteAdder, RequestHandler
 
 	protected function respond(Request $request, Container $scope): Response
 	{
-		$this->dispatcher->setBeforeHandlers($this->beforeHandlers);
-		$this->dispatcher->setAfterHandlers($this->afterHandlers);
 		$handler = new RoutingHandler(
 			$this->router,
 			$this->dispatcher,

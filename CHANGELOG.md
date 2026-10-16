@@ -2,6 +2,10 @@
 
 ## [Unreleased](https://codefloe.com/celema/core/compare/0.9.0...HEAD)
 
+### Breaking Changes
+
+- `App` no longer uses the router's internal `AddsBeforeAfter` trait. `before()` and `after()` add the handler to the app's dispatcher, and `beforeHandlers()`, `afterHandlers()`, `mergeBeforeHandlers()`, `mergeAfterHandlers()`, `setBeforeHandlers()`, and `setAfterHandlers()` are gone.
+
 ### Changed
 
 - The README's development-server section follows `celema/server` 0.4: watching is on by default, `--no-watch` turns it off, and FrankenPHP runs as `./app/run server frankenphp`.
