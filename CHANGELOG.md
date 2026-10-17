@@ -4,6 +4,7 @@
 
 ### Breaking Changes
 
+- Require `celema/router` 0.7. Route groups exist only inside their `group()` callbacks, the handler setters exist only on `Route`, and the router's `AddsBeforeAfter` and `AddsMiddleware` traits are internal.
 - `App` no longer uses the router's internal `AddsBeforeAfter` trait. `before()` and `after()` add the handler to the app's dispatcher, and `beforeHandlers()`, `afterHandlers()`, `mergeBeforeHandlers()`, `mergeAfterHandlers()`, `setBeforeHandlers()`, and `setAfterHandlers()` are gone.
 
 ### Changed
