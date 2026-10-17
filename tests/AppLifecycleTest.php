@@ -17,11 +17,16 @@ use Celema\Core\Tests\Fixtures\Counter;
 use Celema\Core\Tests\Fixtures\FailingLogger;
 use Celema\Core\Tests\Fixtures\RecordingEmitter;
 use Celema\Core\Tests\Fixtures\RecordingLogger;
+use Celema\Router\After;
+use Celema\Router\Before;
+use Celema\Router\Group;
 use Celema\Router\Router;
 use Celema\Server\Console;
 use Closure;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -39,6 +44,45 @@ final class AppLifecycleTest extends TestCase
 
 		$this->assertSame(['1', '1', '1'], $emitter->bodies());
 		$this->assertSame(true, $app->reusable());
+	}
+
+	public function testHandlersAndMiddlewareRunOnceInEveryRequest(): void
+	{
+		$app = App::create();
+		$emitter = new RecordingEmitter();
+		$app->emitter($emitter);
+		$app->middleware($this->middlewareTag('app'));
+		$app->before($this->beforeTrail('app'));
+		$app->after($this->afterTag('app'));
+		$view = static function (ServerRequestInterface $request, Factory $factory): ResponseInterface {
+			$trail = (array) $request->getAttribute('trail', []);
+
+			return Response::create($factory)->text(implode(',', $trail))->unwrap();
+		};
+		$app->get('/', $view);
+		$app->group('/api', function (Group $api) use ($view): void {
+			$api->middleware($this->middlewareTag('group'));
+			$api->before($this->beforeTrail('group'));
+			$api->after($this->afterTag('group'));
+			$api->get('/items', $view);
+		});
+
+		for ($i = 0; $i < 3; $i++) {
+			$app->run($this->request());
+			$app->run($this->request(['REQUEST_URI' => '/api/items']));
+		}
+
+		$home = ['trail' => 'app', 'after' => ['app'], 'middleware' => ['app']];
+		$items = ['trail' => 'app,group', 'after' => ['app', 'group'], 'middleware' => ['group', 'app']];
+
+		$this->assertSame(
+			[$home, $items, $home, $items, $home, $items],
+			array_map(static fn(ResponseInterface $response): array => [
+				'trail' => (string) $response->getBody(),
+				'after' => $response->getHeader('X-After'),
+				'middleware' => $response->getHeader('X-Middleware'),
+			], $emitter->responses),
+		);
 	}
 
 	public function testTeardownRunsAfterEmissionAndScopeReset(): void
@@ -479,5 +523,62 @@ final class AppLifecycleTest extends TestCase
 		});
 
 		return $app;
+	}
+
+	private function beforeTrail(string $name): Before
+	{
+		return new readonly class($name) implements Before {
+			public function __construct(
+				private string $name,
+			) {}
+
+			public function handle(ServerRequestInterface $request): ServerRequestInterface
+			{
+				return $request->withAttribute('trail', [
+					...((array) $request->getAttribute('trail', [])),
+					$this->name,
+				]);
+			}
+
+			public function replace(Before $handler): bool
+			{
+				return false;
+			}
+		};
+	}
+
+	private function afterTag(string $name): After
+	{
+		return new readonly class($name) implements After {
+			public function __construct(
+				private string $name,
+			) {}
+
+			public function handle(mixed $data): mixed
+			{
+				assert($data instanceof ResponseInterface, 'The view returns a response');
+
+				return $data->withAddedHeader('X-After', $this->name);
+			}
+
+			public function replace(After $handler): bool
+			{
+				return false;
+			}
+		};
+	}
+
+	private function middlewareTag(string $name): Middleware
+	{
+		return new readonly class($name) implements Middleware {
+			public function __construct(
+				private string $name,
+			) {}
+
+			public function process(ServerRequestInterface $request, RequestHandler $handler): ResponseInterface
+			{
+				return $handler->handle($request)->withAddedHeader('X-Middleware', $this->name);
+			}
+		};
 	}
 }
