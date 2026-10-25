@@ -21,12 +21,16 @@ final class SapiState
 	/** Flags ob_get_status() reports for the innermost buffer instead of its own. */
 	public static ?int $bufferFlags = null;
 
+	/** Calls of fastcgi_finish_request(). */
+	public static int $endedRequests = 0;
+
 	public static function reset(): void
 	{
 		self::$headersSent = false;
 		self::$headers = [];
 		self::$statusCodes = [];
 		self::$bufferFlags = null;
+		self::$endedRequests = 0;
 	}
 
 	/** @return list<string> */

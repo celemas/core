@@ -66,4 +66,16 @@ namespace {
 	{
 		return Celema\Core\Tests\Fixtures\WorkerState::next($callback);
 	}
+
+	/**
+	 * Stands in for the function PHP-FPM and FrankenPHP provide to end the
+	 * request while the script goes on.
+	 */
+	// @mago-expect lint:function-name
+	function fastcgi_finish_request(): bool
+	{
+		Celema\Core\Tests\Fixtures\SapiState::$endedRequests++;
+
+		return true;
+	}
 }

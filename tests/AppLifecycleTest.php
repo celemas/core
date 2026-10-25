@@ -17,6 +17,7 @@ use Celema\Core\Tests\Fixtures\Counter;
 use Celema\Core\Tests\Fixtures\FailingLogger;
 use Celema\Core\Tests\Fixtures\RecordingEmitter;
 use Celema\Core\Tests\Fixtures\RecordingLogger;
+use Celema\Core\Tests\Fixtures\SapiState;
 use Celema\Router\After;
 use Celema\Router\Before;
 use Celema\Router\Group;
@@ -105,6 +106,41 @@ final class AppLifecycleTest extends TestCase
 		$app->run($this->request());
 
 		$this->assertSame(['resolve', 'emit', 'first teardown', 'second teardown'], $events);
+	}
+
+	public function testTheRequestEndsBetweenEmissionAndTeardown(): void
+	{
+		SapiState::reset();
+		$events = [];
+		$app = $this->countingApp();
+		$app->emitter(new RecordingEmitter(onEmit: static function () use (&$events): void {
+			$events[] = 'emit, ended ' . SapiState::$endedRequests;
+		}));
+		$app->teardown(static function () use (&$events): void {
+			$events[] = 'teardown, ended ' . SapiState::$endedRequests;
+		});
+
+		$app->run($this->request());
+
+		$this->assertSame(['emit, ended 0', 'teardown, ended 1'], $events);
+	}
+
+	public function testAFailedRequestEndsBeforeTheTeardown(): void
+	{
+		SapiState::reset();
+		$app = App::create();
+		$app->logger(new RecordingLogger());
+		$app->emitter($emitter = new RecordingEmitter());
+		$app->get('/', static fn() => throw new RuntimeException('view failed'));
+		$ended = null;
+		$app->teardown(static function () use (&$ended): void {
+			$ended = SapiState::$endedRequests;
+		});
+
+		$app->run($this->request());
+
+		$this->assertSame(500, $emitter->responses[0]->getStatusCode());
+		$this->assertSame(1, $ended);
 	}
 
 	public function testScopeIsResetBeforeTeardownHooks(): void
@@ -452,6 +488,7 @@ final class AppLifecycleTest extends TestCase
 
 	public function testHandleDoesNotEmitAndTearsDown(): void
 	{
+		SapiState::reset();
 		$app = $this->countingApp();
 		$app->emitter($emitter = new RecordingEmitter());
 		$tornDown = false;
@@ -464,6 +501,7 @@ final class AppLifecycleTest extends TestCase
 		$this->assertSame('1', (string) $response->getBody());
 		$this->assertSame([], $emitter->responses);
 		$this->assertSame(true, $tornDown);
+		$this->assertSame(0, SapiState::$endedRequests);
 	}
 
 	public function testHandleRethrowsAndMarksTheAppUnusable(): void

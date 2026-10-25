@@ -187,10 +187,12 @@ class App implements RouteAdder, RequestHandler
 
 	/**
 	 * Registers a callback that runs after every request, once the request's
-	 * container scope was reset: in run() after the response was emitted, in
-	 * handle() before the response is returned. Use it to bring resources
-	 * that outlive a request back to a clean state, such as rolling back a
-	 * database transaction left open.
+	 * container scope was reset: in run() after the response was emitted and,
+	 * where the runtime allows, the request ended, so the client does not
+	 * wait for it; in handle() before the response is returned. Use it to
+	 * bring resources that outlive a request back to a clean state, such as
+	 * rolling back a database transaction left open, or for work the client
+	 * need not wait for.
 	 *
 	 * Callbacks run in registration order. A failing callback does not stop
 	 * the others; failures are logged and the app is no longer reusable.
@@ -225,9 +227,10 @@ class App implements RouteAdder, RequestHandler
 
 	/**
 	 * Handles exactly one request in its own container scope, emits the
-	 * response, then runs the teardown. Throwables that escape the error
-	 * handler or the emitter are logged and answered with a minimal 500
-	 * response if nothing was sent yet; they do not leave this method.
+	 * response, ends the request, then runs the teardown. Throwables that
+	 * escape the error handler or the emitter are logged and answered with a
+	 * minimal 500 response if nothing was sent yet; they do not leave this
+	 * method.
 	 */
 	public function run(?Request $request = null): Response|false
 	{
@@ -248,6 +251,7 @@ class App implements RouteAdder, RequestHandler
 
 			return false;
 		} finally {
+			$this->endRequest();
 			$this->finish($scope, $request);
 		}
 	}
@@ -299,6 +303,18 @@ class App implements RouteAdder, RequestHandler
 		return $this->errorHandler
 			? $this->errorHandler->process($request, $handler)
 			: $handler->handle($request);
+	}
+
+	/**
+	 * Sends the emitted response to the client and closes the connection;
+	 * the script goes on with the teardown. PHP-FPM and FrankenPHP, in both
+	 * modes, provide the function; elsewhere the client waits for the teardown.
+	 */
+	protected function endRequest(): void
+	{
+		if (function_exists('fastcgi_finish_request')) {
+			fastcgi_finish_request();
+		}
 	}
 
 	/**

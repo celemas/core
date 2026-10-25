@@ -63,7 +63,7 @@ Every request goes through the same steps:
 
 1. The app opens a container scope for the request. Routing, middleware, controllers and their autowired arguments resolve through that scope, so `scoped()` entries get one instance per request.
 2. The error handler, if any, wraps routing, middleware and the view.
-3. The response is emitted.
+3. The response is emitted, and the request ends where the runtime supports it: PHP-FPM and FrankenPHP, in both modes, send the response and close the connection, so the client does not wait for the teardown. The CLI development server keeps the client waiting.
 4. The teardown runs: the scope is reset (services implementing `Celema\Container\Resettable` are reset), then the app's teardown hooks run.
 
 `run()` performs these steps for one request; `handle()` implements PSR-15's `RequestHandlerInterface` and returns the response without emitting it, which is useful in tests. In `handle()`, the teardown runs before the response is returned, so a response body must not depend on scoped services.
@@ -80,7 +80,7 @@ $app->teardown(static function () use ($mailer): void {
 });
 ```
 
-Hooks run in registration order. Each one runs even if an earlier one failed.
+Hooks run in registration order. Each one runs even if an earlier one failed. In `run()` the client already has the response, so a hook can also do work it need not wait for, such as notifying other services; its output does not reach the client.
 
 ### Failures
 

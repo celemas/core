@@ -2,7 +2,9 @@
 
 ## [Unreleased](https://codefloe.com/celema/core/compare/0.10.0...HEAD)
 
-No notable changes since the last release.
+### Changed
+
+- `run()` ends the request after emitting the response, with `fastcgi_finish_request()` where the runtime provides it (PHP-FPM, FrankenPHP in classic and worker mode), so the client no longer waits for the scope reset and the teardown hooks. Output from those steps no longer reaches the client; before, it was appended to the response body.
 
 ## [0.10.0](https://codefloe.com/celema/core/src/tag/0.10.0) (2026-10-17)
 
